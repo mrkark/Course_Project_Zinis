@@ -1,73 +1,8 @@
-// backend/src/routes/upload.js
-const express = require('express');
-const multer = require('multer');
-const path = require('path');
-const config = require('../config');
-const { validateFileUpload } = require('../middleware/validation');
-const { asyncHandler } = require('../middleware/errorHandler');
-
-const router = express.Router();
-
-// Настройка multer для загрузки файлов
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, config.upload.dir);
-  },
-  filename: (req, file, cb) => {
-    // Генерируем уникальное имя файла
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  },
-});
-
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: config.upload.maxFileSize,
-  },
-  fileFilter: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (config.upload.allowedExtensions.includes(ext)) {
-      cb(null, true);
-    } else {
-      cb(new Error(`File extension ${ext} not allowed`), false);
-    }
-  },
-});
-
-/**
- * POST /api/upload
- * Upload a file for analysis
- */
-router.post('/', upload.single('file'), validateFileUpload, asyncHandler(async (req, res) => {
-  const scanService = req.app.get('scanService');
-  
-  try {
-    const result = await scanService.processFile(req.file);
-    
-    res.json({
-      success: true,
-      message: 'File uploaded and static analysis complete. Behavioral emulation started.',
-      data: result,
-    });
-  } catch (error) {
-    // Очистка файла при ошибке
-    await scanService.cleanupFile(req.file.path);
-    throw error;
-  }
-}));
-
-/**
- * GET /api/upload/config
- * Get upload configuration
- */
-router.get('/config', (req, res) => {
-  res.json({
-    maxFileSize: config.upload.maxFileSize,
-    allowedExtensions: config.upload.allowedExtensions,
-    allowedMimeTypes: config.upload.allowedMimeTypes,
-  });
-});
-
-module.exports = router;
+const express=require('express');const multer=require('multer');const path=require('path');const fs=require('fs');const config=require('../config');
+const router=express.Router();fs.mkdirSync(config.upload.dir,{recursive:true});fs.mkdirSync(config.sandbox.dir,{recursive:true});
+const upload=multer({storage:multer.diskStorage({destination:config.upload.dir,filename:(r,f,cb)=>cb(null,`${Date.now()}-${Math.random().toString(36).slice(2)}${path.extname(f.originalname)}`)}),limits:{fileSize:config.upload.maxFileSize},fileFilter:(r,f,cb)=>config.upload.allowedExtensions.includes(path.extname(f.originalname).toLowerCase())?cb(null,true):cb(new Error('Unsupported file extension'))});
+router.post('/',upload.single('file'),async(req,res,next)=>{try{if(!req.file)return res.status(400).json({success:false,error:'No file uploaded'});const result=await req.app.get('scanService').processFile(req.file);res.status(202).json({success:true,data:result});}catch(e){next(e)}});
+router.get('/config',(req,res)=>res.json({maxFileSize:config.upload.maxFileSize,allowedExtensions:config.upload.allowedExtensions}));
+router.post('/sandbox-sample',express.json({limit:'1mb'}),async(req,res,next)=>{try{const {type='ransomware',name=`sandbox-${Date.now()}.txt`,content}=req.body;if(!/^[\w .-]+\.(txt|js)$/i.test(name))return res.status(400).json({success:false,error:'Sandbox sample must be .txt or .js'});const templates={ransomware:`SANDBOX TEST SAMPLE\nREADME_DECRYPT.txt\nfile_rename\nfile_write\n`,keylogger:`SANDBOX TEST SAMPLE\nGetAsyncKeyState\nkeystroke_capture\nhttps://example.invalid/c2\n`,backdoor:`SANDBOX TEST SAMPLE\nchild_process\nWebSocket\n192.0.2.10\n`,worm:`SANDBOX TEST SAMPLE\nnetwork scan\nexploit_attempt\n`,trojan:`SANDBOX TEST SAMPLE\nCreateProcess\nbase64_decode\n`,adware:`SANDBOX TEST SAMPLE\nbrowser_extension\ndata_collection\n`};const body=String(content||templates[type]||templates.trojan);const target=path.join(config.sandbox.dir,path.basename(name));await fs.promises.writeFile(target,body,'utf8');res.json({success:true,data:{name:path.basename(name),path:target,size:Buffer.byteLength(body)}});}catch(e){next(e)}});
+router.post('/sandbox-scan',express.json({limit:'1mb'}),async(req,res,next)=>{try{const name=path.basename(String(req.body.name||''));const target=path.join(config.sandbox.dir,name);const stat=await fs.promises.stat(target);const file={path:target,originalname:name,mimetype:name.endsWith('.js')?'text/javascript':'text/plain',size:stat.size};const result=await req.app.get('scanService').processFile(file);res.status(202).json({success:true,data:result});}catch(e){next(e)}});
+module.exports=router;

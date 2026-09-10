@@ -1,4 +1,3 @@
-// frontend/src/store/threatStore.js
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { threatsApi } from '../services/api';
@@ -24,4 +23,4 @@ const useThreatStore = create(
   )
 );
 
-export { useThreatStore };
+export default useThreatStore;

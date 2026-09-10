@@ -3,14 +3,20 @@ const sql = require('mssql');
 const config = require('./index');
 
 let pool = null;
+let isPoolClosing = false;
 
 /**
  * Get or create database connection pool
  * @returns {Promise<sql.ConnectionPool>}
  */
 async function getPool() {
-  if (pool && pool.connected) {
+  if (pool && pool.connected && !isPoolClosing) {
     return pool;
+  }
+
+  if (pool) {
+    try { await pool.close(); } catch {}
+    pool = null;
   }
 
   try {
@@ -19,13 +25,16 @@ async function getPool() {
     console.log('✅ Connected to MSSQL database');
     
     pool.on('error', (err) => {
-      console.error('❌ Database pool error:', err);
-      pool = null;
+      console.error('❌ Database pool error:', err.message);
+      if (!isPoolClosing) {
+        pool = null; // Will recreate on next request
+      }
     });
     
     return pool;
   } catch (error) {
-    console.error('❌ Failed to connect to database:', error);
+    console.error('❌ Failed to connect to database:', error.message);
+    pool = null;
     throw error;
   }
 }
@@ -49,6 +58,7 @@ async function query(query, params = {}) {
 
 /**
  * Execute a stored procedure with support for output parameters
+ * Uses RPC (request.execute) with all parameters declared
  * @param {string} procedureName - Stored procedure name
  * @param {Object} params - Procedure parameters (input and output)
  *   Input: { key: value }
@@ -59,33 +69,63 @@ async function executeProcedure(procedureName, params = {}) {
   const pool = await getPool();
   const request = pool.request();
   
-  const outputParams = {};
+  // Separate input and output parameters
+  const inputParams = {};
+  const outputParamKeys = [];
   
   Object.entries(params).forEach(([key, value]) => {
     if (value && typeof value === 'object' && value.output === true) {
-      // Output parameter
-      request.output(key, value.type);
-      outputParams[key] = key;
+      outputParamKeys.push(key);
     } else {
-      // Input parameter
-      request.input(key, value);
+      inputParams[key] = value;
     }
   });
   
-  const result = await request.execute(procedureName);
-  
-  // Extract output parameters
-  const output = {};
-  Object.keys(outputParams).forEach(key => {
-    output[key] = result.output[key];
-  });
-  
-  return {
-    recordset: result.recordset,
-    recordsets: result.recordsets,
-    output,
-    rowsAffected: result.rowsAffected
-  };
+  try {
+    // For sp_GetScans, declare all possible parameters with defaults
+    if (procedureName === 'sp_GetScans') {
+      request.input('verdict', inputParams.verdict || null);
+      request.input('dateFrom', inputParams.dateFrom || null);
+      request.input('dateTo', inputParams.dateTo || null);
+      request.input('search', inputParams.search || null);
+      request.input('limit', inputParams.limit || 50);
+      request.input('offset', inputParams.offset || 0);
+    } else {
+      // Set input parameters normally
+      Object.entries(inputParams).forEach(([key, value]) => {
+        request.input(key, value);
+      });
+    }
+    
+    // Execute stored procedure using RPC (no output params declared - they're in result sets)
+    const result = await request.execute(procedureName);
+    
+    // Extract output parameters from the last recordset
+    const output = {};
+    if (result.recordsets && result.recordsets.length > 0 && outputParamKeys.length > 0) {
+      const lastRecordset = result.recordsets[result.recordsets.length - 1];
+      if (lastRecordset && lastRecordset.length > 0) {
+        const outputRow = lastRecordset[0];
+        outputParamKeys.forEach(key => {
+          output[key] = outputRow[key];
+        });
+      }
+    }
+    
+    // The actual data is in the recordset before the last one (or first if only one)
+    const dataRecordset = result.recordsets.length > 1 ? result.recordsets[result.recordsets.length - 2] : result.recordset;
+    
+    return {
+      recordset: dataRecordset || [],
+      recordsets: result.recordsets || [dataRecordset || []],
+      output,
+      rowsAffected: result.rowsAffected
+    };
+  } catch (error) {
+    console.error('❌ Database error in ' + procedureName + ':', error.message || error);
+    console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    throw error;
+  }
 }
 
 /**
@@ -99,11 +139,7 @@ async function executeProcedureMulti(procedureName, params = {}) {
   const request = pool.request();
   
   Object.entries(params).forEach(([key, value]) => {
-    if (value && typeof value === 'object' && value.output === true) {
-      request.output(key, value.type);
-    } else {
-      request.input(key, value);
-    }
+    request.input(key, value);
   });
   
   const result = await request.execute(procedureName);
@@ -119,6 +155,7 @@ async function executeProcedureMulti(procedureName, params = {}) {
  * Close database connection pool
  */
 async function closePool() {
+  isPoolClosing = true;
   if (pool) {
     await pool.close();
     pool = null;

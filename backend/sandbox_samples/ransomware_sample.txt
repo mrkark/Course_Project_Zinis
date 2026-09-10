@@ -1,0 +1,5 @@
+SANDBOX TEST SAMPLE — inert text only
+README_DECRYPT.txt
+file_rename
+file_write
+cmd.exe

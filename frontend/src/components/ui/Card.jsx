@@ -1,4 +1,3 @@
-// frontend/src/components/ui/Card.jsx
 const Card = ({ children, className = '', padding = 'p-6' }) => {
   return (
     <div className={`card ${padding} ${className}`}>
@@ -35,5 +34,4 @@ Card.Header = CardHeader;
 Card.Content = CardContent;
 Card.Footer = CardFooter;
 
-export { CardHeader, CardContent, CardFooter };
 export default Card;

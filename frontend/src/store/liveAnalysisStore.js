@@ -1,11 +1,9 @@
-// frontend/src/store/liveAnalysisStore.js
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 const useLiveAnalysisStore = create(
   devtools(
-    (set, get) => ({
-      // State
+    (set) => ({
       isConnected: false,
       currentScanId: null,
       events: [],
@@ -14,12 +12,11 @@ const useLiveAnalysisStore = create(
       staticResults: null,
       behavioralResults: null,
       finalResult: null,
-      stage: 'idle', // idle, static_analysis, behavioral_emulation, complete, error
+      stage: 'idle',
       progress: 0,
       alerts: [],
-      riskScoreHistory: [], // [{ timestamp, score }]
+      riskScoreHistory: [],
       
-      // Actions
       setConnected: (connected) => set({ isConnected: connected }),
       
       startAnalysis: (scanId, staticResults) => set({
@@ -33,33 +30,26 @@ const useLiveAnalysisStore = create(
         stage: 'behavioral_emulation',
         progress: 50,
         alerts: [],
-        riskScoreHistory: [{ timestamp: Date.now(), score: staticResults.riskScore || 0 }],
+        riskScoreHistory: [{ timestamp: Date.now(), score: staticResults?.riskScore || 0 }],
       }),
       
       addEvent: (event) => set((state) => {
         const newEvents = [...state.events, { ...event, id: Date.now() + Math.random() }];
-        // Keep only last 500 events
-        if (newEvents.length > 500) {
-          newEvents.shift();
-        }
+        if (newEvents.length > 500) newEvents.shift();
         return { events: newEvents };
       }),
       
       updateRiskScore: (score, verdict) => set((state) => ({
         riskScore: score,
         verdict,
-        riskScoreHistory: [
-          ...state.riskScoreHistory.slice(-99), // Keep last 100 points
-          { timestamp: Date.now(), score }
-        ],
+        riskScoreHistory: [...state.riskScoreHistory.slice(-99), { timestamp: Date.now(), score }],
       })),
       
       addAlert: (alert) => set((state) => ({
-        alerts: [...state.alerts.slice(-49), { ...alert, id: Date.now() }], // Keep last 50
+        alerts: [...state.alerts.slice(-49), { ...alert, id: Date.now() }],
       })),
       
       setStage: (stage, progress) => set({ stage, progress }),
-      
       setBehavioralResults: (results) => set({ behavioralResults: results }),
       
       setFinalResult: (result) => set({
@@ -70,10 +60,7 @@ const useLiveAnalysisStore = create(
         verdict: result.verdict,
       }),
       
-      setError: (error) => set({
-        stage: 'error',
-        error,
-      }),
+      setError: (error) => set({ stage: 'error', error }),
       
       reset: () => set({
         isConnected: false,
@@ -94,4 +81,4 @@ const useLiveAnalysisStore = create(
   )
 );
 
-export { useLiveAnalysisStore };
+export default useLiveAnalysisStore;

@@ -1,4 +1,3 @@
-// frontend/src/components/ui/Select.jsx
 import { forwardRef } from 'react';
 
 const Select = forwardRef(({

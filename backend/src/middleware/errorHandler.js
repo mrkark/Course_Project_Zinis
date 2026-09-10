@@ -29,9 +29,10 @@ function errorHandler(err, req, res, next) {
   
   // Database errors
   if (err.name === 'RequestError' || err.code) {
+    console.error('DB Error caught:', err.name, err.code, err.message, err.originalError?.message);
     return res.status(500).json({ 
       error: 'Database error',
-      message: config.nodeEnv === 'development' ? err.message : 'Internal server error',
+      message: config.nodeEnv === 'development' ? (err.message || err.originalError?.message || 'No message') : 'Internal server error',
     });
   }
   

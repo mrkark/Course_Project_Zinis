@@ -1,14 +1,27 @@
-// frontend/src/main.jsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import useSocketStore from './store/socketStore';
+import { socketService } from './services/socket';
 import './index.css';
+
+function AppWrapper() {
+  const { initSocket, connect } = useSocketStore();
+
+  useEffect(() => {
+    const cleanup = initSocket();
+    connect();
+    return cleanup;
+  }, [initSocket, connect]);
+
+  return <App />;
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <App />
+      <AppWrapper />
     </BrowserRouter>
   </React.StrictMode>
 );

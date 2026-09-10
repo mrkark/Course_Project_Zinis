@@ -1,4 +1,3 @@
-// frontend/src/components/ui/Button.jsx
 import { forwardRef } from 'react';
 
 const Button = forwardRef(({

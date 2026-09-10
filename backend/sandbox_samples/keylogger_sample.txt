@@ -1,0 +1,4 @@
+SANDBOX TEST SAMPLE — inert text only
+GetAsyncKeyState
+keystroke_capture
+https://example.invalid/c2

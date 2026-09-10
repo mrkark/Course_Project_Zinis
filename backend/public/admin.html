@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malware Sandbox - Admin Monitor</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid #334155; margin-bottom: 20px; }
+        h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .status { display: flex; align-items: center; gap: 10px; font-size: 0.875rem; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; }
+        .status-dot.connected { background: #22c55e; box-shadow: 0 0 10px #22c55e; }
+        .status-dot.disconnected { background: #ef4444; box-shadow: 0 0 10px #ef4444; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 1024px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; overflow: hidden; }
+        .card-header { padding: 16px 20px; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-weight: 600; font-size: 1rem; }
+        .card-content { padding: 20px; max-height: 600px; overflow-y: auto; }
+        .log-entry { padding: 8px 12px; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.75rem; border-bottom: 1px solid #1e293a; display: flex; gap: 12px; }
+        .log-entry:last-child { border-bottom: none; }
+        .log-time { color: #64748b; font-size: 0.7rem; white-space: nowrap; }
+        .log-level { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; white-space: nowrap; }
+        .log-level.info { background: #1e3a5f; color: #60a5fa; }
+        .log-level.success { background: #14532d; color: #4ade80; }
+        .log-level.warning { background: #78350f; color: #fbbf24; }
+        .log-level.error { background: #7f1d1d; color: #f87171; }
+        .log-level.socket { background: #3b0764; color: #d8b4fe; }
+        .log-message { color: #cbd5e1; flex: 1; word-break: break-word; }
+        .client-list { display: flex; flex-direction: column; gap: 8px; }
+        .client-item { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+        .client-id { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #94a3b8; background: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #334155; }
+        .client-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 200px; }
+        .client-ua { font-size: 0.7rem; color: #64748b; font-family: 'JetBrains Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .client-meta { display: flex; gap: 12px; font-size: 0.7rem; color: #94a3b8; }
+        .client-status { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 600; }
+        .client-status.connected { color: #22c55e; }
+        .client-status.disconnected { color: #ef4444; }
+        .empty { text-align: center; color: #64748b; padding: 40px; font-size: 0.875rem; }
+        .stats { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 12px 20px; display: flex; flex-direction: column; min-width: 120px; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; color: #f8fafc; }
+        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat.connected .stat-value { color: #22c55e; }
+        .stat.disconnected .stat-value { color: #ef4444; }
+        .stat.warning .stat-value { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛡️ Malware Sandbox - Server Monitor</h1>
+            <div class="status">
+                <span class="status-dot disconnected" id="serverStatusDot"></span>
+                <span id="serverStatusText">Checking...</span>
+            </div>
+        </header>
+
+        <div class="stats">
+            <div class="stat connected" id="statConnected">
+                <span class="stat-value" id="connectedCount">0</span>
+                <span class="stat-label">Connected Clients</span>
+            </div>
+            <div class="stat disconnected" id="statDisconnected">
+                <span class="stat-value" id="disconnectedCount">0</span>
+                <span class="stat-label">Disconnected</span>
+            </div>
+            <div class="stat warning" id="statTotal">
+                <span class="stat-value" id="totalEvents">0</span>
+                <span class="stat-label">Total Events</span>
+            </div>
+            <div class="stat" id="statUptime">
+                <span class="stat-value" id="uptimeValue">0s</span>
+                <span class="stat-label">Server Uptime</span>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">📋 Server Logs</span>
+                    <button onclick="clearLogs()" style="background: #334155; border: none; color: #94a3b8; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Clear</button>
+                </div>
+                <div class="card-content" id="logsContainer">
+                    <div class="empty">Waiting for logs...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">🔌 Connected Clients</span>
+                    <span id="clientCount" style="font-size: 0.75rem; color: #94a3b8;">0</span>
+                </div>
+                <div class="card-content">
+                    <div class="client-list" id="clientsContainer">
+                        <div class="empty">No clients connected</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io('/admin', {
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 10,
+            reconnectionDelay: 1000,
+        });
+
+        let logs = [];
+        let clients = new Map();
+        let totalEvents = 0;
+        let startTime = Date.now();
+
+        const logsContainer = document.getElementById('logsContainer');
+        const clientsContainer = document.getElementById('clientsContainer');
+        const serverStatusDot = document.getElementById('serverStatusDot');
+        const serverStatusText = document.getElementById('serverStatusText');
+        const clientCountEl = document.getElementById('clientCount');
+        const connectedCountEl = document.getElementById('connectedCount');
+        const disconnectedCountEl = document.getElementById('disconnectedCount');
+        const totalEventsEl = document.getElementById('totalEvents');
+        const uptimeValueEl = document.getElementById('uptimeValue');
+
+        function updateUptime() {
+            const uptime = Date.now() - startTime;
+            const seconds = Math.floor(uptime / 1000);
+            const minutes = Math.floor(seconds / 60);
+            const hours = Math.floor(minutes / 60);
+            let str = '';
+            if (hours > 0) str += hours + 'h ';
+            if (minutes > 0) str += (minutes % 60) + 'm ';
+            str += (seconds % 60) + 's';
+            uptimeValueEl.textContent = str;
+        }
+
+        function updateStats() {
+            let connected = 0, disconnected = 0;
+            clients.forEach(client => {
+                if (client.connected) connected++;
+                else disconnected++;
+            });
+            connectedCountEl.textContent = connected;
+            disconnectedCountEl.textContent = disconnected;
+            clientCountEl.textContent = clients.size;
+            totalEventsEl.textContent = totalEvents;
+        }
+
+        function addLog(level, message, meta = {}) {
+            const entry = {
+                timestamp: new Date(),
+                level,
+                message,
+                meta,
+            };
+            logs.unshift(entry);
+            if (logs.length > 500) logs.pop();
+            totalEvents++;
+            renderLogs();
+            updateStats();
+        }
+
+        function renderLogs() {
+            if (logs.length === 0) {
+                logsContainer.innerHTML = '<div class="empty">No logs yet</div>';
+                return;
+            }
+            logsContainer.innerHTML = logs.map(log => `
+                <div class="log-entry">
+                    <span class="log-time">${log.timestamp.toLocaleTimeString()}.${String(log.timestamp.getMilliseconds()).padStart(3, '0')}</span>
+                    <span class="log-level ${log.level}">${log.level}</span>
+                    <span class="log-message">${escapeHtml(log.message)}</span>
+                </div>
+            `).join('');
+        }
+
+        function renderClients() {
+            if (clients.size === 0) {
+                clientsContainer.innerHTML = '<div class="empty">No clients connected</div>';
+                return;
+            }
+            clientsContainer.innerHTML = Array.from(clients.values()).map(client => `
+                <div class="client-item">
+                    <span class="client-id">${escapeHtml(client.id)}</span>
+                    <div class="client-info">
+                        <span class="client-ua">${escapeHtml(client.userAgent || 'Unknown')}</span>
+                        <div class="client-meta">
+                            <span>Joined: ${client.joinedAt ? new Date(client.joinedAt).toLocaleTimeString() : 'Unknown'}</span>
+                            <span>Events: ${client.eventCount || 0}</span>
+                            <span>IP: ${client.ip || 'Unknown'}</span>
+                        </div>
+                    </div>
+                    <div class="client-status ${client.connected ? 'connected' : 'disconnected'}">
+                        <span class="status-dot ${client.connected ? 'connected' : 'disconnected'}"></span>
+                        ${client.connected ? 'Connected' : 'Disconnected'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function clearLogs() {
+            logs = [];
+            totalEvents = 0;
+            renderLogs();
+            updateStats();
+        }
+
+        // Socket events
+        socket.on('connect', () => {
+            serverStatusDot.className = 'status-dot connected';
+            serverStatusText.textContent = 'Connected';
+            addLog('success', 'Connected to server');
+        });
+
+        socket.on('disconnect', (reason) => {
+            serverStatusDot.className = 'status-dot disconnected';
+            serverStatusText.textContent = 'Disconnected: ' + reason;
+            addLog('error', 'Disconnected from server: ' + reason);
+        });
+
+        socket.on('connect_error', (err) => {
+            addLog('error', 'Connection error: ' + err.message);
+        });
+
+        // Admin events from server
+        socket.on('log', (data) => {
+            addLog(data.level || 'info', data.message, data.meta);
+        });
+
+        socket.on('client:connected', (client) => {
+            clients.set(client.id, { ...client, connected: true, joinedAt: new Date(), eventCount: 0 });
+            addLog('socket', `Client connected: ${client.id}`);
+            renderClients();
+            updateStats();
+        });
+
+        socket.on('client:disconnected', (data) => {
+            const client = clients.get(data.id);
+            if (client) {
+                client.connected = false;
+                client.disconnectedAt = new Date();
+            }
+            addLog('warning', `Client disconnected: ${data.id} (${data.reason})`);
+            renderClients();
+            updateStats();
+        });
+
+        socket.on('client:event', (data) => {
+            const client = clients.get(data.clientId);
+            if (client) {
+                client.eventCount = (client.eventCount || 0) + 1;
+                client.lastEvent = new Date();
+            }
+            // Don't log every event to avoid spam
+        });
+
+        socket.on('client:info', (data) => {
+            const client = clients.get(data.id);
+            if (client) {
+                Object.assign(client, data);
+            }
+        });
+
+        socket.on('initial:state', (state) => {
+            // Initial state from server
+            if (state.clients) {
+                state.clients.forEach(c => clients.set(c.id, { ...c, connected: true, joinedAt: new Date(c.joinedAt), eventCount: c.eventCount || 0 }));
+            }
+            if (state.logs) {
+                logs = state.logs.reverse();
+                totalEvents = logs.length;
+                renderLogs();
+            }
+            if (state.uptime) {
+                startTime = Date.now() - state.uptime;
+            }
+            renderClients();
+            updateStats();
+            updateUptime();
+        });
+
+        // Request initial state
+        socket.emit('admin:getState');
+
+        // Uptime interval
+        setInterval(updateUptime, 1000);
+    </script>
+</body>
+</html>

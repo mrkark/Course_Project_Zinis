@@ -1,4 +1,3 @@
-// frontend/src/store/scanStore.js
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { scansApi } from '../services/api';
@@ -6,7 +5,6 @@ import { scansApi } from '../services/api';
 const useScanStore = create(
   devtools(
     (set, get) => ({
-      // State
       scans: [],
       currentScan: null,
       stats: null,
@@ -15,7 +13,6 @@ const useScanStore = create(
       loading: false,
       error: null,
       
-      // Actions
       setLoading: (loading) => set({ loading }),
       setError: (error) => set({ error }),
       clearError: () => set({ error: null }),
@@ -88,7 +85,7 @@ const useScanStore = create(
       
       setFilters: (filters) => set((state) => ({
         filters: { ...state.filters, ...filters },
-        pagination: { ...state.pagination, offset: 0 }, // Reset to first page
+        pagination: { ...state.pagination, offset: 0 },
       })),
       
       clearCurrentScan: () => set({ currentScan: null }),
@@ -97,4 +94,4 @@ const useScanStore = create(
   )
 );
 
-export { useScanStore };
+export default useScanStore;

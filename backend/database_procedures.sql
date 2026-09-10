@@ -161,7 +161,7 @@ BEGIN
     
     DECLARE @sql NVARCHAR(MAX);
     DECLARE @where NVARCHAR(MAX) = 'WHERE 1=1';
-    DECLARE @params NVARCHAR(MAX) = '@limit INT, @offset INT';
+    DECLARE @params NVARCHAR(MAX) = '@limit INT, @offset INT, @totalCount INT OUTPUT';
     DECLARE @searchPattern NVARCHAR(255) = NULL;
     
     IF @verdict IS NOT NULL

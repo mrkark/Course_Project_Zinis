@@ -1,4 +1,3 @@
-// frontend/src/components/charts/VerdictDistributionChart.jsx
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const COLORS = {

@@ -1,4 +1,3 @@
-// frontend/src/components/charts/ActivityChart.jsx
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 export default function ActivityChart({ data, className = '', height = 300 }) {

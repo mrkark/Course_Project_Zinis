@@ -1,8 +1,7 @@
-// frontend/src/pages/ScanDetails.jsx
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useScanStore } from '../store/scanStore';
-import Card, { CardHeader, CardContent } from '../components/ui/Card';
+import useScanStore from '../store/scanStore';
+import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import RiskScoreChart from '../components/charts/RiskScoreChart';
@@ -104,7 +103,6 @@ export default function ScanDetails() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Scan Details</h1>
@@ -119,7 +117,6 @@ export default function ScanDetails() {
         </div>
       </div>
 
-      {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <div className="text-center">
@@ -147,16 +144,13 @@ export default function ScanDetails() {
         </Card>
       </div>
 
-      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Panel - File Info & Static Analysis */}
         <div className="lg:col-span-1 space-y-6">
-          {/* File Info */}
           <Card>
-            <CardHeader>
+            <Card.Header>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">File Information</h3>
-            </CardHeader>
-            <CardContent>
+            </Card.Header>
+            <Card.Content>
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <dt className="text-gray-500 dark:text-gray-400">Filename</dt>
@@ -183,16 +177,15 @@ export default function ScanDetails() {
                   <dd className="font-medium">{formatDate(scan.createdAt)}</dd>
                 </div>
               </dl>
-            </CardContent>
+            </Card.Content>
           </Card>
 
-          {/* Static Analysis Findings */}
           {staticDetails.findings && staticDetails.findings.length > 0 && (
             <Card>
-              <CardHeader>
+              <Card.Header>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Static Findings ({staticDetails.findings.length})</h3>
-              </CardHeader>
-              <CardContent>
+              </Card.Header>
+              <Card.Content>
                 <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
                   {staticDetails.findings.map((finding, i) => (
                     <div key={i} className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -207,19 +200,17 @@ export default function ScanDetails() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
+              </Card.Content>
             </Card>
           )}
         </div>
 
-        {/* Right Panel - Behavioral & Combined */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Risk Score Chart */}
           <Card>
-            <CardHeader>
+            <Card.Header>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Risk Score Progression</h3>
-            </CardHeader>
-            <CardContent>
+            </Card.Header>
+            <Card.Content>
               <RiskScoreChart 
                 data={combinedDetails.riskScoreHistory?.map(h => ({ 
                   timestamp: h.timestamp, 
@@ -230,16 +221,15 @@ export default function ScanDetails() {
                 })) || []} 
                 height={250} 
               />
-            </CardContent>
+            </Card.Content>
           </Card>
 
-          {/* Behavioral Events */}
           {behavioralDetails.events && behavioralDetails.events.length > 0 && (
             <Card>
-              <CardHeader>
+              <Card.Header>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Behavioral Events ({behavioralDetails.events.length})</h3>
-              </CardHeader>
-              <CardContent className="p-0">
+              </Card.Header>
+              <Card.Content className="p-0">
                 <div className="max-h-96 overflow-y-auto scrollbar-thin divide-y divide-gray-200 dark:divide-gray-700">
                   {behavioralDetails.events.map((event, i) => (
                     <div 
@@ -271,17 +261,16 @@ export default function ScanDetails() {
                     </div>
                   ))}
                 </div>
-              </CardContent>
+              </Card.Content>
             </Card>
           )}
 
-          {/* Detection Results */}
           {(staticDetails.detection || behavioralDetails.detection) && (
             <Card>
-              <CardHeader>
+              <Card.Header>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Detection Results</h3>
-              </CardHeader>
-              <CardContent>
+              </Card.Header>
+              <Card.Content>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {staticDetails.detection && (
                     <div>
@@ -350,7 +339,7 @@ export default function ScanDetails() {
                     </div>
                   )}
                 </div>
-              </CardContent>
+              </Card.Content>
             </Card>
           )}
         </div>

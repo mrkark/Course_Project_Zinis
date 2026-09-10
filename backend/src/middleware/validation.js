@@ -2,38 +2,42 @@
 const config = require('../config');
 
 /**
- * Validate file upload
+ * Validate file upload (single or multiple)
  */
 function validateFileUpload(req, res, next) {
-  if (!req.file) {
+  const files = req.files || (req.file ? [req.file] : []);
+  
+  if (files.length === 0) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
   
-  const { originalname, mimetype, size } = req.file;
-  const ext = originalname.substring(originalname.lastIndexOf('.')).toLowerCase();
-  
-  // Проверка расширения
-  if (!config.upload.allowedExtensions.includes(ext)) {
-    return res.status(400).json({ 
-      error: `File extension ${ext} not allowed`,
-      allowed: config.upload.allowedExtensions,
-    });
-  }
-  
-  // Проверка MIME типа
-  if (!config.upload.allowedMimeTypes.includes(mimetype)) {
-    return res.status(400).json({ 
-      error: `MIME type ${mimetype} not allowed`,
-      allowed: config.upload.allowedMimeTypes,
-    });
-  }
-  
-  // Проверка размера
-  if (size > config.upload.maxFileSize) {
-    return res.status(400).json({ 
-      error: `File size ${size} exceeds limit of ${config.upload.maxFileSize} bytes`,
-      maxSize: config.upload.maxFileSize,
-    });
+  for (const file of files) {
+    const { originalname, mimetype, size } = file;
+    const ext = originalname.substring(originalname.lastIndexOf('.')).toLowerCase();
+    
+    // Проверка расширения
+    if (!config.upload.allowedExtensions.includes(ext)) {
+      return res.status(400).json({ 
+        error: `File extension ${ext} not allowed`,
+        allowed: config.upload.allowedExtensions,
+      });
+    }
+    
+    // Проверка MIME типа
+    if (!config.upload.allowedMimeTypes.includes(mimetype)) {
+      return res.status(400).json({ 
+        error: `MIME type ${mimetype} not allowed`,
+        allowed: config.upload.allowedMimeTypes,
+      });
+    }
+    
+    // Проверка размера
+    if (size > config.upload.maxFileSize) {
+      return res.status(400).json({ 
+        error: `File size ${size} exceeds limit of ${config.upload.maxFileSize} bytes`,
+        maxSize: config.upload.maxFileSize,
+      });
+    }
   }
   
   next();

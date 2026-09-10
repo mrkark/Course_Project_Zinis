@@ -1,4 +1,3 @@
-// frontend/src/components/charts/RiskScoreChart.jsx
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area } from 'recharts';
 
 export default function RiskScoreChart({ data, className = '', height = 300 }) {
@@ -49,7 +48,6 @@ export default function RiskScoreChart({ data, className = '', height = 300 }) {
             dot={false}
             activeDot={{ r: 6, strokeWidth: 2 }}
           />
-          {/* Threshold lines */}
           <Line type="monotone" dataKey="critical" stroke="#dc2626" strokeDasharray="5 5" strokeWidth={1} dot={false} isAnimationActive={false} />
           <Line type="monotone" dataKey="high" stroke="#f59e0b" strokeDasharray="5 5" strokeWidth={1} dot={false} isAnimationActive={false} />
           <Line type="monotone" dataKey="medium" stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={1} dot={false} isAnimationActive={false} />

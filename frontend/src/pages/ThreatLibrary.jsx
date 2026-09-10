@@ -1,7 +1,6 @@
-// frontend/src/pages/ThreatLibrary.jsx
 import { useEffect } from 'react';
-import { useThreatStore } from '../store/threatStore';
-import Card, { CardContent } from '../components/ui/Card';
+import useThreatStore from '../store/threatStore';
+import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 
 const SEVERITY_ICONS = {
@@ -54,7 +53,7 @@ export default function ThreatLibrary() {
                 </div>
               </div>
               
-              <CardContent className="p-6 space-y-4">
+              <Card.Content className="p-6 space-y-4">
                 <div>
                   <h4 className="font-medium text-gray-900 dark:text-white mb-2">Description</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{threat.description}</p>
@@ -80,7 +79,7 @@ export default function ThreatLibrary() {
                     ))}
                   </div>
                 </div>
-              </CardContent>
+              </Card.Content>
             </Card>
           ))}
         </div>

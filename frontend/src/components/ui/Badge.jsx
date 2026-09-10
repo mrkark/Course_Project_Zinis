@@ -1,4 +1,3 @@
-// frontend/src/components/ui/Badge.jsx
 const Badge = ({ children, variant = 'info', className = '', dot = false }) => {
   const variants = {
     critical: 'badge-critical',
@@ -17,7 +16,6 @@ const Badge = ({ children, variant = 'info', className = '', dot = false }) => {
     CLEAN: 'badge-clean',
   };
   
-  // Auto-detect verdict variant
   const badgeClass = verdictVariants[children?.toUpperCase?.()] || variants[variant] || variants.info;
   
   return (

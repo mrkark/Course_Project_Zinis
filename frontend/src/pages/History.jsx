@@ -1,8 +1,8 @@
-// frontend/src/pages/History.jsx
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useScanStore } from '../store/scanStore';
-import Card, { CardContent } from '../components/ui/Card';
+import { useSocketStore } from '../store/socketStore';
+import useScanStore from '../store/scanStore';
+import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
 import Select from '../components/ui/Select';
@@ -19,6 +19,7 @@ const VERDICT_OPTIONS = [
 
 export default function History() {
   const navigate = useNavigate();
+  const { isConnected } = useSocketStore();
   const { scans, pagination, filters, loading, fetchScans, deleteScan, setFilters, setPagination } = useScanStore();
   const [search, setSearch] = useState(filters.search || '');
   const [verdictFilter, setVerdictFilter] = useState(filters.verdict || '');
@@ -30,10 +31,21 @@ export default function History() {
     fetchScans({ search, verdict: verdictFilter, dateFrom: dateFrom ? new Date(dateFrom) : undefined, dateTo: dateTo ? new Date(dateTo) : undefined });
   }, [fetchScans, search, verdictFilter, dateFrom, dateTo]);
 
+  // Auto-refresh when connected and a scan completes
+  useEffect(() => {
+    if (!isConnected) return;
+    
+    const handleScanComplete = () => {
+      fetchScans({ search, verdict: verdictFilter, dateFrom: dateFrom ? new Date(dateFrom) : undefined, dateTo: dateTo ? new Date(dateTo) : undefined });
+    };
+
+    window.addEventListener('scan:complete', handleScanComplete);
+    return () => window.removeEventListener('scan:complete', handleScanComplete);
+  }, [isConnected, fetchScans, search, verdictFilter, dateFrom, dateTo]);
+
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearch(value);
-    // Debounce search
     setTimeout(() => setFilters({ search: value }), 300);
   };
 
@@ -96,9 +108,8 @@ export default function History() {
         </div>
       </div>
 
-      {/* Filters */}
       <Card>
-        <CardContent className="p-4">
+        <Card.Content className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Input
               label="Search"
@@ -128,10 +139,9 @@ export default function History() {
               />
             </div>
           </div>
-        </CardContent>
+        </Card.Content>
       </Card>
 
-      {/* Results Table */}
       <Card>
         <div className="table-container">
           <table className="table">
@@ -210,7 +220,6 @@ export default function History() {
           </table>
         </div>
 
-        {/* Pagination */}
         {pagination.total > pagination.limit && (
           <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
             <div className="text-sm text-gray-500 dark:text-gray-400">
