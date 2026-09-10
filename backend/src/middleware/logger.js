@@ -9,7 +9,11 @@ function requestLogger(req, res, next) {
   const { method, url, ip, headers } = req;
   
   // Логируем входящий запрос
-  console.log(`📥 ${method} ${url} - ${ip} - ${headers['user-agent']?.substring(0, 50)}`);
+  const requestMessage = `${method} ${url} - ${ip} - ${headers['user-agent']?.substring(0, 50) || 'Unknown'}`;
+  console.log(`📥 ${requestMessage}`);
+  if (typeof global.adminLog === 'function' && !url.startsWith('/api/admin')) {
+    global.adminLog('info', requestMessage, { method, url, ip });
+  }
   
   // Перехватываем завершение ответа
   res.on('finish', () => {
@@ -17,7 +21,11 @@ function requestLogger(req, res, next) {
     const { statusCode } = res;
     const statusIcon = statusCode >= 400 ? '❌' : statusCode >= 300 ? '⚠️' : '✅';
     
-    console.log(`${statusIcon} ${method} ${url} - ${statusCode} - ${duration}ms`);
+    const responseMessage = `${method} ${url} - ${statusCode} - ${duration}ms`;
+    console.log(`${statusIcon} ${responseMessage}`);
+    if (typeof global.adminLog === 'function' && !url.startsWith('/api/admin')) {
+      global.adminLog(statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warning' : 'success', responseMessage, { statusCode, duration });
+    }
   });
   
   next();

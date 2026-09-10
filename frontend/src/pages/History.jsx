@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSocketStore } from '../store/socketStore';
+import useSocketStore from '../store/socketStore';
 import useScanStore from '../store/scanStore';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
@@ -9,12 +9,12 @@ import Select from '../components/ui/Select';
 import Input from '../components/ui/Input';
 
 const VERDICT_OPTIONS = [
-  { value: '', label: 'All Verdicts' },
-  { value: 'CRITICAL', label: 'Critical' },
-  { value: 'HIGH', label: 'High' },
-  { value: 'MEDIUM', label: 'Medium' },
-  { value: 'LOW', label: 'Low' },
-  { value: 'CLEAN', label: 'Clean' },
+  { value: '', label: 'Все вердикты' },
+  { value: 'CRITICAL', label: 'Критический' },
+  { value: 'HIGH', label: 'Высокий' },
+  { value: 'MEDIUM', label: 'Средний' },
+  { value: 'LOW', label: 'Низкий' },
+  { value: 'CLEAN', label: 'Без угроз' },
 ];
 
 export default function History() {
@@ -103,8 +103,8 @@ export default function History() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Scan History</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">View and manage all scan records</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">История сканирований</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Просмотр и управление результатами сканирования</p>
         </div>
       </div>
 
@@ -112,30 +112,33 @@ export default function History() {
         <Card.Content className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Input
-              label="Search"
-              placeholder="Filename or hash..."
+              label="Поиск"
+              placeholder="Имя файла или хеш..."
               value={search}
               onChange={handleSearchChange}
-              className="lg:col-span-2"
+              className="history-filter lg:col-span-2"
             />
             <Select
-              label="Verdict"
+              label="Вердикт"
               options={VERDICT_OPTIONS}
               value={verdictFilter}
               onChange={handleVerdictChange}
+              className="history-filter"
             />
             <div className="grid grid-cols-2 gap-2">
               <Input
-                label="Date From"
+                label="Дата от"
                 type="date"
                 value={dateFrom}
                 onChange={handleDateFromChange}
+                className="history-filter"
               />
               <Input
-                label="Date To"
+                label="Дата до"
                 type="date"
                 value={dateTo}
                 onChange={handleDateToChange}
+                className="history-filter"
               />
             </div>
           </div>
@@ -148,20 +151,20 @@ export default function History() {
             <thead>
               <tr>
                 <th className="w-10">#</th>
-                <th>Filename</th>
-                <th className="hidden md:table-cell">Type</th>
-                <th className="hidden lg:table-cell">Size</th>
-                <th>Verdict</th>
-                <th>Risk Score</th>
-                <th className="hidden md:table-cell">Date</th>
-                <th className="w-24">Actions</th>
+                <th>Имя файла</th>
+                <th className="hidden md:table-cell">Тип</th>
+                <th className="hidden lg:table-cell">Размер</th>
+                <th>Вердикт</th>
+                <th>Оценка риска</th>
+                <th className="hidden md:table-cell">Дата</th>
+                <th className="w-24">Действия</th>
               </tr>
             </thead>
             <tbody>
               {scans.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-4 py-12 text-center text-gray-500 dark:text-gray-400">
-                    No scans found. <Link to="/upload" className="text-primary-600 hover:underline">Upload a file</Link> to get started.
+                    No scans found. <Link to="/upload" className="text-primary-600 hover:underline">Загрузить файл</Link> для начала анализа.
                   </td>
                 </tr>
               ) : (
@@ -188,7 +191,7 @@ export default function History() {
                     </td>
                     <td>
                       <div className="flex items-center justify-end gap-1">
-                        <Link to={`/history/${scan.id}`} className="p-2 text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 rounded" title="View Details">
+                        <Link to={`/history/${scan.id}`} className="p-2 text-gray-500 hover:text-primary-600 dark:hover:text-primary-400 rounded" title="Открыть подробности">
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -198,7 +201,7 @@ export default function History() {
                           onClick={() => handleDelete(scan.id)}
                           disabled={deletingId === scan.id}
                           className="p-2 text-gray-500 hover:text-danger-600 dark:hover:text-danger-400 rounded disabled:opacity-50"
-                          title="Delete"
+                          title="Удалить"
                         >
                           {deletingId === scan.id ? (
                             <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">

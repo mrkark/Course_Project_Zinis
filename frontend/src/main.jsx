@@ -6,6 +6,9 @@ import useSocketStore from './store/socketStore';
 import { socketService } from './services/socket';
 import './index.css';
 
+// The application uses a dark interface by default.
+document.documentElement.classList.add('dark');
+
 function AppWrapper() {
   const { initSocket, connect } = useSocketStore();
 

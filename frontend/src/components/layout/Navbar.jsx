@@ -1,3 +1,28 @@
-import {NavLink} from 'react-router-dom';import useSocketStore from '../../store/socketStore';
-const items=[['/','Обзор'],['/upload','Сканировать'],['/live','Live'],['/sandbox','Песочница'],['/history','История'],['/threats','Угрозы']];
-export default function Navbar(){const online=useSocketStore(s=>s.isConnected);return <header className="topbar"><NavLink to="/" className="brand"><span className="brand-mark">MS</span><span><b>Malware Sandbox</b><small>static & behavioral analysis</small></span></NavLink><nav>{items.map(([to,label])=><NavLink key={to} to={to} end={to==='/' }>{label}</NavLink>)}</nav><span className={`status ${online?'online':''}`}><i/> {online?'ONLINE':'OFFLINE'}</span></header>}
+import { NavLink } from 'react-router-dom';
+
+const navItems = [
+  { path: '/', label: 'Dashboard' },
+  { path: '/upload', label: 'Сканировать файл' },
+  { path: '/threats', label: 'Библиотека угроз' },
+  { path: '/history', label: 'История' },
+];
+
+export default function Navbar() {
+  return (
+    <nav className="site-nav">
+      <div className="nav-inner">
+        <NavLink to="/" className="brand">
+          <span className="brand-mark">MS</span>
+          <span>Песочница анализа вредоносных файлов</span>
+        </NavLink>
+        <div className="nav-links">
+          {navItems.map((item) => (
+            <NavLink key={item.path} to={item.path} end={item.path === '/'} className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+}

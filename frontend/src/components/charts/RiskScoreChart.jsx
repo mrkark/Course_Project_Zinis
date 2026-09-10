@@ -4,7 +4,7 @@ export default function RiskScoreChart({ data, className = '', height = 300 }) {
   if (!data || data.length === 0) {
     return (
       <div className={`h-${height}px flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded-lg ${className}`}>
-        <p className="text-gray-500 dark:text-gray-400">No data available</p>
+        <p className="text-gray-500 dark:text-gray-400">Нет данных</p>
       </div>
     );
   }

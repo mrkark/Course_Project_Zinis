@@ -13,7 +13,8 @@ function validateFileUpload(req, res, next) {
   
   for (const file of files) {
     const { originalname, mimetype, size } = file;
-    const ext = originalname.substring(originalname.lastIndexOf('.')).toLowerCase();
+    const dotIndex = originalname.lastIndexOf('.');
+    const ext = dotIndex >= 0 ? originalname.substring(dotIndex).toLowerCase() : '';
     
     // Проверка расширения
     if (!config.upload.allowedExtensions.includes(ext)) {
@@ -23,13 +24,9 @@ function validateFileUpload(req, res, next) {
       });
     }
     
-    // Проверка MIME типа
-    if (!config.upload.allowedMimeTypes.includes(mimetype)) {
-      return res.status(400).json({ 
-        error: `MIME type ${mimetype} not allowed`,
-        allowed: config.upload.allowedMimeTypes,
-      });
-    }
+    // MIME types sent by browsers differ between Windows, Chrome and file types
+    // such as EXE/DLL. The extension check above is the authoritative check.
+    // Keep MIME only as diagnostic information instead of rejecting a valid file.
     
     // Проверка размера
     if (size > config.upload.maxFileSize) {

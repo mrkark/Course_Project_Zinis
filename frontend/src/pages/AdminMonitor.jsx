@@ -169,8 +169,8 @@ export default function AdminMonitor() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Server Monitor</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Real-time server logs, connected clients, and system status</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Мониторинг сервера</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Журналы сервера и подключённые клиенты в реальном времени</p>
         </div>
         <div className="flex items-center gap-4">
           <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${
@@ -184,26 +184,26 @@ export default function AdminMonitor() {
             <input type="checkbox" checked={autoScroll} onChange={e => setAutoScroll(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
             Auto-scroll
           </label>
-          <Button variant="ghost" size="sm" onClick={clearLogs}>Clear Logs</Button>
+          <Button variant="ghost" size="sm" onClick={clearLogs}>Очистить журналы</Button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="card p-4 bg-green-500/10 border-green-500/20">
           <div className="text-3xl font-bold text-green-500">{stats.connected || 0}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">Connected Clients</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Подключённые клиенты</div>
         </div>
         <div className="card p-4 bg-red-500/10 border-red-500/20">
           <div className="text-3xl font-bold text-red-500">{stats.disconnected || 0}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">Disconnected</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Отключённые</div>
         </div>
         <div className="card p-4 bg-yellow-500/10 border-yellow-500/20">
           <div className="text-3xl font-bold text-yellow-500">{stats.totalEvents || 0}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">Total Events</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Всего событий</div>
         </div>
         <div className="card p-4 bg-blue-500/10 border-blue-500/20">
           <div className="text-3xl font-bold text-blue-500">{formatUptime(stats.uptime || 0)}</div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">Server Uptime</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Время работы сервера</div>
         </div>
       </div>
 
@@ -216,7 +216,7 @@ export default function AdminMonitor() {
                 <input type="checkbox" checked={autoScroll} onChange={e => setAutoScroll(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
                 Auto-scroll
               </label>
-              <Button variant="ghost" size="sm" onClick={clearLogs}>Clear Logs</Button>
+              <Button variant="ghost" size="sm" onClick={clearLogs}>Очистить журналы</Button>
             </div>
           </Card.Header>
           <Card.Content className="flex-1 overflow-hidden flex flex-col">
@@ -276,11 +276,11 @@ export default function AdminMonitor() {
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 font-mono flex flex-wrap gap-4">
                         <span title={client.userAgent} className="truncate max-w-[200px]">{client.userAgent?.slice(0, 80)}...</span>
-                        <span>Events: {client.eventCount || 0}</span>
-                        <span>Joined: {client.joinedAt ? formatTimeAgo(client.joinedAt) : 'Unknown'}</span>
-                        <span>IP: {client.ip}</span>
-                        {client.disconnectedAt && <span className="text-red-500">Left: {formatTimeAgo(client.disconnectedAt)}</span>}
-                        {client.disconnectReason && <span className="text-red-500">Reason: {client.disconnectReason}</span>}
+                        <span>События: {client.eventCount || 0}</span>
+                        <span>Подключён: {client.joinedAt ? formatTimeAgo(client.joinedAt) : 'Unknown'}</span>
+                        <span>IP-адрес: {client.ip}</span>
+                        {client.disconnectedAt && <span className="text-red-500">Отключён: {formatTimeAgo(client.disconnectedAt)}</span>}
+                        {client.disconnectReason && <span className="text-red-500">Причина: {client.disconnectReason}</span>}
                       </div>
                     </div>
                   </div>

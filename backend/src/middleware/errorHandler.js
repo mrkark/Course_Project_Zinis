@@ -22,6 +22,13 @@ function errorHandler(err, req, res, next) {
     return res.status(400).json({ error: err.message });
   }
   
+  if (err.code === 'INVALID_FILE_TYPE') {
+    return res.status(400).json({
+      error: err.message,
+      allowed: config.upload.allowedExtensions,
+    });
+  }
+
   // Validation errors
   if (err.name === 'ValidationError') {
     return res.status(400).json({ error: err.message });

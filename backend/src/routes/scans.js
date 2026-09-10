@@ -1,5 +1,82 @@
-const express=require('express');const router=express.Router();
-router.get('/stats',async(req,res,next)=>{try{res.json({success:true,data:await req.app.get('scanService').getStats()})}catch(e){next(e)}});
-router.get('/',async(req,res,next)=>{try{const r=await req.app.get('scanService').getScans({verdict:req.query.verdict,search:req.query.search,dateFrom:req.query.dateFrom,dateTo:req.query.dateTo,limit:req.query.limit,offset:req.query.offset});res.json({success:true,data:r.scans,pagination:r.pagination})}catch(e){next(e)}});
-router.get('/:id',async(req,res,next)=>{try{const id=Number(req.params.id);if(!Number.isInteger(id)||id<1)return res.status(400).json({success:false,error:'Invalid scan id'});const r=await req.app.get('scanService').getScanById(id);if(!r)return res.status(404).json({success:false,error:'Scan not found'});res.json({success:true,data:r})}catch(e){next(e)}});
-router.delete('/:id',async(req,res,next)=>{try{const ok=await req.app.get('scanService').deleteScan(Number(req.params.id));if(!ok)return res.status(404).json({success:false,error:'Scan not found'});res.json({success:true})}catch(e){next(e)}});module.exports=router;
+// backend/src/routes/scans.js
+const express = require('express');
+const { validateScanId, validatePagination, validateDates } = require('../middleware/validation');
+const { asyncHandler } = require('../middleware/errorHandler');
+
+const router = express.Router();
+
+/**
+ * GET /api/scans
+ * Get list of scans with filters
+ */
+router.get('/', validatePagination, validateDates, asyncHandler(async (req, res) => {
+  const scanService = req.app.get('scanService');
+  
+  const filters = {
+    ...req.filters,
+    verdict: req.query.verdict,
+    search: req.query.search,
+    limit: req.pagination.limit,
+    offset: req.pagination.offset,
+  };
+  
+  const result = await scanService.getScans(filters);
+  
+  res.json({
+    success: true,
+    data: result.scans,
+    pagination: result.pagination,
+  });
+}));
+
+/**
+ * GET /api/scans/stats
+ * Get dashboard statistics
+ */
+router.get('/stats', asyncHandler(async (req, res) => {
+  const scanService = req.app.get('scanService');
+  const stats = await scanService.getStats();
+  
+  res.json({
+    success: true,
+    data: stats,
+  });
+}));
+
+/**
+ * GET /api/scans/:id
+ * Get scan details by ID
+ */
+router.get('/:id', validateScanId, asyncHandler(async (req, res) => {
+  const scanService = req.app.get('scanService');
+  const scan = await scanService.getScanById(req.scanId);
+  
+  if (!scan) {
+    return res.status(404).json({ success: false, error: 'Scan not found' });
+  }
+  
+  res.json({
+    success: true,
+    data: scan,
+  });
+}));
+
+/**
+ * DELETE /api/scans/:id
+ * Delete a scan
+ */
+router.delete('/:id', validateScanId, asyncHandler(async (req, res) => {
+  const scanService = req.app.get('scanService');
+  const deleted = await scanService.deleteScan(req.scanId);
+  
+  if (!deleted) {
+    return res.status(404).json({ success: false, error: 'Scan not found' });
+  }
+  
+  res.json({
+    success: true,
+    message: 'Scan deleted successfully',
+  });
+}));
+
+module.exports = router;

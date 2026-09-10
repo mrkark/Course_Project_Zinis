@@ -87,9 +87,9 @@ export default function ScanDetails() {
   if (!currentScan) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Scan not found</h2>
-        <Button variant="primary" asChild onClick={() => navigate('/history')}>
-          <a href="/history">Back to History</a>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Сканирование не найдено</h2>
+        <Button variant="primary" onClick={() => navigate('/history')}>
+          Back to History
         </Button>
       </div>
     );
@@ -105,14 +105,14 @@ export default function ScanDetails() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Scan Details</h1>
-          <p className="text-gray-500 dark:text-gray-400">ID: <code className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{scan.id}</code></p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Подробности сканирования</h1>
+          <p className="text-gray-500 dark:text-gray-400">Идентификатор: <code className="bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">{scan.id}</code></p>
         </div>
         <div className="flex items-center gap-4">
           <Badge variant={scan.verdict.toLowerCase()} className="text-lg px-4 py-2">{scan.verdict}</Badge>
-          <Button variant="danger" onClick={handleDelete}>Delete</Button>
-          <Button variant="secondary" asChild onClick={() => navigate('/history')}>
-            <a href="/history">Back to History</a>
+          <Button variant="danger" onClick={handleDelete}>Удалить</Button>
+          <Button variant="secondary" onClick={() => navigate('/history')}>
+            Back to History
           </Button>
         </div>
       </div>
@@ -121,25 +121,25 @@ export default function ScanDetails() {
         <Card>
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 dark:text-white">{scan.riskScore}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Risk Score</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Оценка риска</div>
           </div>
         </Card>
         <Card>
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 dark:text-white">{formatFileSize(scan.fileSize)}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">File Size</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Файл Size</div>
           </div>
         </Card>
         <Card>
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 dark:text-white">{scan.fileType}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">File Type</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Файл Type</div>
           </div>
         </Card>
         <Card>
           <div className="text-center">
             <div className="text-3xl font-bold text-gray-900 dark:text-white">{formatDate(scan.createdAt).split(',')[0]}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Scan Date</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Дата сканирования</div>
           </div>
         </Card>
       </div>
@@ -148,32 +148,32 @@ export default function ScanDetails() {
         <div className="lg:col-span-1 space-y-6">
           <Card>
             <Card.Header>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">File Information</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Файл Information</h3>
             </Card.Header>
             <Card.Content>
               <dl className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Filename</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Имя файла</dt>
                   <dd className="font-mono truncate max-w-[200px] text-right">{scan.filename}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">SHA256</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">SHA-256</dt>
                   <dd className="font-mono text-xs truncate max-w-[200px] text-right">{scan.fileHash}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Size</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Размер</dt>
                   <dd className="font-medium">{formatFileSize(scan.fileSize)}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Type</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Тип</dt>
                   <dd className="font-medium">{scan.fileType}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">MIME Type</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">MIME-тип</dt>
                   <dd className="font-medium text-xs truncate max-w-[200px] text-right">{scan.mimeType}</dd>
                 </div>
                 <div className="flex justify-between">
-                  <dt className="text-gray-500 dark:text-gray-400">Scanned</dt>
+                  <dt className="text-gray-500 dark:text-gray-400">Время сканирования</dt>
                   <dd className="font-medium">{formatDate(scan.createdAt)}</dd>
                 </div>
               </dl>
@@ -183,7 +183,7 @@ export default function ScanDetails() {
           {staticDetails.findings && staticDetails.findings.length > 0 && (
             <Card>
               <Card.Header>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Static Findings ({staticDetails.findings.length})</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Результаты статического анализа ({staticDetails.findings.length})</h3>
               </Card.Header>
               <Card.Content>
                 <div className="space-y-2 max-h-96 overflow-y-auto scrollbar-thin">
@@ -208,7 +208,7 @@ export default function ScanDetails() {
         <div className="lg:col-span-2 space-y-6">
           <Card>
             <Card.Header>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Risk Score Progression</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Оценка риска Progression</h3>
             </Card.Header>
             <Card.Content>
               <RiskScoreChart 
@@ -227,7 +227,7 @@ export default function ScanDetails() {
           {behavioralDetails.events && behavioralDetails.events.length > 0 && (
             <Card>
               <Card.Header>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Behavioral Events ({behavioralDetails.events.length})</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">События поведенческого анализа ({behavioralDetails.events.length})</h3>
               </Card.Header>
               <Card.Content className="p-0">
                 <div className="max-h-96 overflow-y-auto scrollbar-thin divide-y divide-gray-200 dark:divide-gray-700">
@@ -268,20 +268,20 @@ export default function ScanDetails() {
           {(staticDetails.detection || behavioralDetails.detection) && (
             <Card>
               <Card.Header>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Detection Results</h3>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Результаты обнаружения</h3>
               </Card.Header>
               <Card.Content>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {staticDetails.detection && (
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-3">Static Analysis</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-3">Статический анализ</h4>
                       <dl className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Risk Score</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Оценка риска</dt>
                           <dd className="font-bold">{staticDetails.detection.riskScore}/100</dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Verdict</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Вердикт</dt>
                           <dd className="font-bold">
                             <Badge variant={staticDetails.detection.verdict.toLowerCase()}>
                               {staticDetails.detection.verdict}
@@ -289,11 +289,11 @@ export default function ScanDetails() {
                           </dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Findings</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Находки</dt>
                           <dd className="font-medium">{staticDetails.detection.staticFindings}</dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Categories</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Категории</dt>
                           <dd className="font-medium text-xs truncate max-w-[150px]">
                             {(staticDetails.detection.categories || []).join(', ') || 'None'}
                           </dd>
@@ -303,14 +303,14 @@ export default function ScanDetails() {
                   )}
                   {behavioralDetails.detection && (
                     <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white mb-3">Behavioral Analysis</h4>
+                      <h4 className="font-medium text-gray-900 dark:text-white mb-3">Поведенческий анализ</h4>
                       <dl className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Risk Score</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Оценка риска</dt>
                           <dd className="font-bold">{behavioralDetails.detection.riskScore}/100</dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Verdict</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Вердикт</dt>
                           <dd className="font-bold">
                             <Badge variant={behavioralDetails.detection.verdict.toLowerCase()}>
                               {behavioralDetails.detection.verdict}
@@ -318,21 +318,21 @@ export default function ScanDetails() {
                           </dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Total Events</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Всего событий</dt>
                           <dd className="font-medium">{behavioralDetails.detection.eventCount}</dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Critical Events</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Критический Events</dt>
                           <dd className="font-medium text-danger-600 dark:text-danger-400">
                             {behavioralDetails.detection.criticalEvents}
                           </dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Network Events</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Сетевые события</dt>
                           <dd className="font-medium">{behavioralDetails.detection.networkEvents}</dd>
                         </div>
                         <div className="flex justify-between">
-                          <dt className="text-gray-500 dark:text-gray-400">Triggered Rules</dt>
+                          <dt className="text-gray-500 dark:text-gray-400">Сработавшие правила</dt>
                           <dd className="font-medium">{behavioralDetails.detection.triggeredRules?.length || 0}</dd>
                         </div>
                       </dl>

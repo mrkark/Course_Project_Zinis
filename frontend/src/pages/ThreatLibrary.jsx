@@ -20,7 +20,7 @@ export default function ThreatLibrary() {
   return (
     <div className="space-y-8 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Threat Library</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Библиотека угроз</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">
           Reference database of malware types, characteristics, and detection signatures
         </p>
@@ -29,7 +29,7 @@ export default function ThreatLibrary() {
       {loading ? (
         <Card className="py-12 text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-600 border-t-transparent mx-auto"></div>
-          <p className="mt-4 text-gray-500 dark:text-gray-400">Loading threat library...</p>
+          <p className="mt-4 text-gray-500 dark:text-gray-400">Загрузка библиотеки угроз...</p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -55,12 +55,12 @@ export default function ThreatLibrary() {
               
               <Card.Content className="p-6 space-y-4">
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Description</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Описание</h4>
                   <p className="text-sm text-gray-600 dark:text-gray-400">{threat.description}</p>
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Characteristics</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Характеристики</h4>
                   <div className="flex flex-wrap gap-2">
                     {(threat.characteristics || []).map((char, i) => (
                       <Badge key={i} variant="info" className="text-xs">{char}</Badge>
@@ -69,7 +69,7 @@ export default function ThreatLibrary() {
                 </div>
                 
                 <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Score Weights</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Весовые коэффициенты</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {Object.entries(threat.scoreWeights || {}).map(([key, value]) => (
                       <div key={key} className="p-2 bg-gray-50 dark:bg-gray-800 rounded">
