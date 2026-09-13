@@ -50,14 +50,28 @@ RETURNS TABLE
 AS
 RETURN
 (
-    SELECT 
-        CAST(created_at AS DATE) as scan_date,
-        verdict,
-        COUNT(*) as scan_count,
-        AVG(CAST(risk_score AS FLOAT)) as avg_risk_score
-    FROM dbo.Scans
-    WHERE created_at >= DATEADD(day, -@days, SYSDATETIME())
-    GROUP BY CAST(created_at AS DATE), verdict
+    WITH Dates AS (
+        SELECT CAST(DATEADD(day, -(@days - 1), CAST(SYSDATETIME() AS date)) AS date) AS scan_date
+        UNION ALL
+        SELECT DATEADD(day, 1, scan_date)
+        FROM Dates
+        WHERE scan_date < CAST(SYSDATETIME() AS date)
+    ), Aggregated AS (
+        SELECT CAST(created_at AS date) AS scan_date, verdict, COUNT(*) AS scan_count
+        FROM dbo.Scans
+        WHERE created_at >= DATEADD(day, -(@days - 1), CAST(SYSDATETIME() AS date))
+        GROUP BY CAST(created_at AS date), verdict
+    )
+    SELECT d.scan_date,
+           COALESCE(SUM(a.scan_count), 0) AS scan_count,
+           COALESCE(SUM(CASE WHEN a.verdict = 'CLEAN' THEN a.scan_count ELSE 0 END), 0) AS clean_count,
+           COALESCE(SUM(CASE WHEN a.verdict = 'LOW' THEN a.scan_count ELSE 0 END), 0) AS low_count,
+           COALESCE(SUM(CASE WHEN a.verdict = 'MEDIUM' THEN a.scan_count ELSE 0 END), 0) AS medium_count,
+           COALESCE(SUM(CASE WHEN a.verdict = 'HIGH' THEN a.scan_count ELSE 0 END), 0) AS high_count,
+           COALESCE(SUM(CASE WHEN a.verdict = 'CRITICAL' THEN a.scan_count ELSE 0 END), 0) AS critical_count
+    FROM Dates d
+    LEFT JOIN Aggregated a ON a.scan_date = d.scan_date
+    GROUP BY d.scan_date
 );
 GO
 

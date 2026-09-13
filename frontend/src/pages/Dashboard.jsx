@@ -11,7 +11,7 @@ import VerdictDistributionChart from '../components/charts/VerdictDistributionCh
 import ActivityChart from '../components/charts/ActivityChart';
 
 const STAT_CARDS = [
-  { key: 'total', label: 'Total scans', color: 'primary' },
+  { key: 'total', label: 'Всего сканирований', color: 'primary' },
   { key: 'critical', label: 'Критический', color: 'danger' },
   { key: 'high', label: 'Высокий', color: 'warning' },
   { key: 'medium', label: 'Средний', color: 'warning' },
@@ -79,7 +79,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Результат сохранён в базе данных</p>
             </div>
             <Badge variant={location.state.scanResult.verdict?.toLowerCase() || 'info'}>
-              {location.state.scanResult.verdict || 'UNKNOWN'}
+              {location.state.scanResult.verdict || 'НЕИЗВЕСТНО'}
             </Badge>
           </Card.Header>
           <Card.Content>
@@ -101,8 +101,8 @@ export default function Dashboard() {
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                 <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"><span className="text-gray-500">Оценка поведения</span><div className="font-semibold text-gray-900 dark:text-white">{location.state.scanResult.result.behavioral.riskScore}/100</div></div>
                 <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"><span className="text-gray-500">События</span><div className="font-semibold text-gray-900 dark:text-white">{location.state.scanResult.result.behavioral.eventCount}</div></div>
-                <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"><span className="text-gray-500">Критический events</span><div className="font-semibold text-gray-900 dark:text-white">{location.state.scanResult.result.behavioral.criticalEvents}</div></div>
-                <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"><span className="text-gray-500">Тип угрозы</span><div className="font-semibold text-gray-900 dark:text-white">{location.state.scanResult.result.behavioral.malwareType || location.state.scanResult.behavioral?.malwareType || 'Detected'}</div></div>
+                <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"><span className="text-gray-500">Критические события</span><div className="font-semibold text-gray-900 dark:text-white">{location.state.scanResult.result.behavioral.criticalEvents}</div></div>
+                <div className="p-3 rounded-lg border border-gray-200 dark:border-gray-700"><span className="text-gray-500">Тип угрозы</span><div className="font-semibold text-gray-900 dark:text-white">{location.state.scanResult.result.behavioral.malwareType || location.state.scanResult.behavioral?.malwareType || 'Обнаружено'}</div></div>
               </div>
             )}
             {location.state.scanResult.scanId && (
@@ -137,7 +137,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <Card.Header>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Вердикт Distribution</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Распределение вердиктов</h3>
           </Card.Header>
           <Card.Content>
             <VerdictDistributionChart 
@@ -149,7 +149,7 @@ export default function Dashboard() {
 
         <Card>
           <Card.Header>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Оценка риска Trend</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Динамика оценки риска</h3>
           </Card.Header>
           <Card.Content>
             <RiskScoreChart 
@@ -163,7 +163,7 @@ export default function Dashboard() {
               height={300}
             />
             <p className="text-center text-gray-500 dark:text-gray-400 mt-4 text-sm">
-              Risk scores from completed scans
+              Оценки риска завершённых сканирований
             </p>
           </Card.Content>
         </Card>

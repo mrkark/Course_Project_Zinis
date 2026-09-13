@@ -19,6 +19,8 @@ const uploadRoutes = require('./src/routes/upload');
 const scansRoutes = require('./src/routes/scans');
 const threatsRoutes = require('./src/routes/threats');
 const adminRoutes = require('./src/routes/admin');
+const authRoutes = require('./src/routes/auth');
+const { requireAuth } = require('./src/middleware/auth');
 
 // Initialize Express app
 console.log('🚀 Starting server initialization...');
@@ -71,9 +73,10 @@ app.get('/api/health', (req, res) => {
 });
 
 // API Routes
-app.use('/api/upload', uploadRoutes);
-app.use('/api/scans', scansRoutes);
-app.use('/api/threats', threatsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/upload', requireAuth, uploadRoutes);
+app.use('/api/scans', requireAuth, scansRoutes);
+app.use('/api/threats', requireAuth, threatsRoutes);
 app.use('/api/admin', adminRoutes);
 
 // Admin monitor page - serve at /admin on port 3000

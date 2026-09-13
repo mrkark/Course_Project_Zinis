@@ -11,7 +11,7 @@ class Scan {
    * @returns {Promise<Object>} Created scan
    */
   static async create(scanData) {
-    const { filename, fileHash, fileSize, fileType, mimeType, riskScore, analysisDetails } = scanData;
+    const { filename, fileHash, fileSize, fileType, mimeType, riskScore, analysisDetails, userId } = scanData;
     
     // Calculate verdict from risk score
     let verdict = 'CLEAN';
@@ -21,8 +21,8 @@ class Scan {
     else if (riskScore > 0) verdict = 'LOW';
     
     const query = `
-      INSERT INTO dbo.Scans (filename, file_hash, file_size, file_type, mime_type, verdict, risk_score, analysis_details)
-      VALUES (@filename, @fileHash, @fileSize, @fileType, @mimeType, @verdict, @riskScore, @analysisDetails);
+      INSERT INTO dbo.Scans (filename, file_hash, file_size, file_type, mime_type, verdict, risk_score, analysis_details, user_id)
+      VALUES (@filename, @fileHash, @fileSize, @fileType, @mimeType, @verdict, @riskScore, @analysisDetails, @userId);
       SELECT SCOPE_IDENTITY() as scanId;
     `;
     
@@ -34,7 +34,8 @@ class Scan {
       mimeType,
       verdict,
       riskScore,
-      analysisDetails: JSON.stringify(analysisDetails)
+      analysisDetails: JSON.stringify(analysisDetails),
+      userId: userId || null
     };
     
     const result = await db.query(query, params);
@@ -56,7 +57,8 @@ class Scan {
     try {
       // Build WHERE clause
       const whereConditions = ['1=1'];
-      const params = { limit, offset };
+      if (filters.userId) { whereConditions.push('user_id = @userId'); }
+      const params = { limit, offset, userId: filters.userId || null };
       let paramIndex = 0;
       
       if (filters.verdict) {
@@ -189,9 +191,13 @@ class Scan {
       averageRiskScore: Number(overall.avg_risk_score) || 0,
       maxRiskScore: Number(overall.max_risk_score) || 0,
       recentActivity: recent.map(r => ({
-        date: r.scan_date,
-        count: r.scan_count,
-        avgScore: r.avg_risk_score
+        date: r.scan_date instanceof Date ? r.scan_date.toISOString().slice(0, 10) : String(r.scan_date).slice(0, 10),
+        count: Number(r.scan_count) || 0,
+        clean: Number(r.clean_count) || 0,
+        low: Number(r.low_count) || 0,
+        medium: Number(r.medium_count) || 0,
+        high: Number(r.high_count) || 0,
+        critical: Number(r.critical_count) || 0
       })),
       scoreDistribution: distribution.map(d => ({
         range: d.score_range,
@@ -230,6 +236,7 @@ class Scan {
   static formatScan(row) {
     return {
       id: row.id,
+      userId: row.user_id,
       filename: row.filename,
       fileHash: row.file_hash,
       fileSize: row.file_size,

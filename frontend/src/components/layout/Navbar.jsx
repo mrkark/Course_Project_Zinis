@@ -1,13 +1,16 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/authStore';
 
 const navItems = [
-  { path: '/', label: 'Dashboard' },
+  { path: '/', label: 'Главная' },
   { path: '/upload', label: 'Сканировать файл' },
   { path: '/threats', label: 'Библиотека угроз' },
   { path: '/history', label: 'История' },
 ];
 
 export default function Navbar() {
+  const { token, user, logout } = useAuthStore();
+  const navigate = useNavigate();
   return (
     <nav className="site-nav">
       <div className="nav-inner">
@@ -21,6 +24,19 @@ export default function Navbar() {
               {item.label}
             </NavLink>
           ))}
+        </div>
+        <div className="nav-account">
+          {token ? (
+            <button className="account-button" title={user?.email || 'Аккаунт'} onClick={async () => { await logout(); navigate('/login'); }}>
+              <span className="account-icon">{(user?.email || 'U').slice(0, 1).toUpperCase()}</span>
+              <span className="account-label">{user?.email || 'Аккаунт'}</span>
+            </button>
+          ) : (
+            <button className="account-button" onClick={() => navigate('/login')}>
+              <span className="account-icon">↪</span>
+              <span className="account-label">Войти</span>
+            </button>
+          )}
         </div>
       </div>
     </nav>

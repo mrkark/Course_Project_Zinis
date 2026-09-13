@@ -13,10 +13,10 @@ class FileAnalyzer {
     this.suspiciousPatterns = {
       // Общие паттерны для всех файлов
       general: [
-        { pattern: /cmd\.exe/gi, score: 10, description: 'Command shell execution' },
-        { pattern: /powershell\.exe/gi, score: 15, description: 'PowerShell execution' },
-        { pattern: /eval\(/gi, score: 20, description: 'Dynamic code evaluation' },
-        { pattern: /child_process/gi, score: 15, description: 'Child process spawning' },
+        { pattern: /cmd\.exe/gi, score: 10, description: 'Запуск командной оболочки' },
+        { pattern: /powershell\.exe/gi, score: 15, description: 'Запуск PowerShell' },
+        { pattern: /eval\(/gi, score: 20, description: 'Динамическое выполнение кода' },
+        { pattern: /child_process/gi, score: 15, description: 'Создание дочернего процесса' },
         { pattern: /CreateRemoteThread/gi, score: 25, description: 'Remote thread creation (injection)' },
         { pattern: /WriteProcessMemory/gi, score: 25, description: 'Process memory manipulation' },
         { pattern: /VirtualAllocEx/gi, score: 20, description: 'Memory allocation in remote process' },
@@ -32,8 +32,8 @@ class FileAnalyzer {
       
       // URL и IP адреса
       network: [
-        { pattern: /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi, score: 5, description: 'HTTP/URL found' },
-        { pattern: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, score: 5, description: 'IPv4 address found' },
+        { pattern: /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi, score: 5, description: 'Обнаружен HTTP-адрес или URL' },
+        { pattern: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, score: 5, description: 'Обнаружен IPv4-адрес' },
         { pattern: /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g, score: 5, description: 'IPv6 address found' },
       ],
 
@@ -245,7 +245,7 @@ class FileAnalyzer {
       results.findings.push({
         category: 'entropy',
         pattern: 'high_entropy',
-        description: `High entropy detected (${entropy}), possible packing/encryption`,
+        description: `Высокая энтропия файла (${entropy}), possible packing/encryption`,
         score: 15,
         matches: 1,
         matchExamples: [`Entropy: ${entropy}`],

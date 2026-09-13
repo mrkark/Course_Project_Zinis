@@ -18,6 +18,7 @@ router.get('/', validatePagination, validateDates, asyncHandler(async (req, res)
     search: req.query.search,
     limit: req.pagination.limit,
     offset: req.pagination.offset,
+    userId: req.user.role === 'admin' ? undefined : req.user.id,
   };
   
   const result = await scanService.getScans(filters);
@@ -35,7 +36,7 @@ router.get('/', validatePagination, validateDates, asyncHandler(async (req, res)
  */
 router.get('/stats', asyncHandler(async (req, res) => {
   const scanService = req.app.get('scanService');
-  const stats = await scanService.getStats();
+  const stats = await scanService.getStats(req.user.role === 'admin' ? undefined : req.user.id);
   
   res.json({
     success: true,
@@ -49,7 +50,7 @@ router.get('/stats', asyncHandler(async (req, res) => {
  */
 router.get('/:id', validateScanId, asyncHandler(async (req, res) => {
   const scanService = req.app.get('scanService');
-  const scan = await scanService.getScanById(req.scanId);
+  const scan = await scanService.getScanById(req.scanId, req.user.role === 'admin' ? undefined : req.user.id);
   
   if (!scan) {
     return res.status(404).json({ success: false, error: 'Scan not found' });
@@ -67,7 +68,7 @@ router.get('/:id', validateScanId, asyncHandler(async (req, res) => {
  */
 router.delete('/:id', validateScanId, asyncHandler(async (req, res) => {
   const scanService = req.app.get('scanService');
-  const deleted = await scanService.deleteScan(req.scanId);
+  const deleted = await scanService.deleteScan(req.scanId, req.user.role === 'admin' ? undefined : req.user.id);
   
   if (!deleted) {
     return res.status(404).json({ success: false, error: 'Scan not found' });
