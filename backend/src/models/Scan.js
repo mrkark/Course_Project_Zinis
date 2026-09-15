@@ -12,20 +12,26 @@ class Scan {
    */
   static async create(scanData) {
     const { filename, fileHash, fileSize, fileType, mimeType, riskScore, analysisDetails, userId } = scanData;
-    
-    // Calculate verdict from risk score
-    let verdict = 'CLEAN';
-    if (riskScore >= 80) verdict = 'CRITICAL';
-    else if (riskScore >= 50) verdict = 'HIGH';
-    else if (riskScore >= 30) verdict = 'MEDIUM';
-    else if (riskScore > 0) verdict = 'LOW';
-    
+
+    // Вердикт приходит уже посчитанным из Detector (там же учитываются пороги из config),
+    // но на случай прямого вызова модели оставляем пересчёт как fallback.
+    const cfg = require('../config');
+    const { critical, high, medium } = cfg.analysis.riskScores;
+    let verdict = scanData.verdict;
+    if (!verdict) {
+      verdict = 'CLEAN';
+      if (riskScore >= critical) verdict = 'CRITICAL';
+      else if (riskScore >= high) verdict = 'HIGH';
+      else if (riskScore >= medium) verdict = 'MEDIUM';
+      else if (riskScore > 0) verdict = 'LOW';
+    }
+
     const query = `
       INSERT INTO dbo.Scans (filename, file_hash, file_size, file_type, mime_type, verdict, risk_score, analysis_details, user_id)
       VALUES (@filename, @fileHash, @fileSize, @fileType, @mimeType, @verdict, @riskScore, @analysisDetails, @userId);
       SELECT SCOPE_IDENTITY() as scanId;
     `;
-    
+
     const params = {
       filename,
       fileHash,
@@ -35,9 +41,9 @@ class Scan {
       verdict,
       riskScore,
       analysisDetails: JSON.stringify(analysisDetails),
-      userId: userId || null
+      userId: userId || null,
     };
-    
+
     const result = await db.query(query, params);
     const scanId = result.recordset[0]?.scanId;
     if (!scanId) throw new Error('Failed to create scan record');
@@ -46,63 +52,65 @@ class Scan {
 
   /**
    * Get all scans with optional filters using direct query
-   * @param {Object} filters - Filter options
+   * @param {Object} filters - Filter options (verdict, dateFrom, dateTo, search, userId, limit, offset)
    * @returns {Promise<Object>} { scans, pagination }
    */
   static async findAll(filters = {}) {
     const limit = filters.limit || 50;
     const offset = filters.offset || 0;
-    
-    console.log('Scan.findAll called with filters:', filters);
+
     try {
-      // Build WHERE clause
       const whereConditions = ['1=1'];
-      if (filters.userId) { whereConditions.push('user_id = @userId'); }
-      const params = { limit, offset, userId: filters.userId || null };
+      const params = { limit, offset };
       let paramIndex = 0;
-      
+
       if (filters.verdict) {
         paramIndex++;
         whereConditions.push(`verdict = @verdict${paramIndex}`);
         params[`verdict${paramIndex}`] = filters.verdict;
       }
-      
+
       if (filters.dateFrom) {
         paramIndex++;
         whereConditions.push(`created_at >= @dateFrom${paramIndex}`);
         params[`dateFrom${paramIndex}`] = filters.dateFrom;
       }
-      
+
       if (filters.dateTo) {
         paramIndex++;
         whereConditions.push(`created_at <= @dateTo${paramIndex}`);
         params[`dateTo${paramIndex}`] = filters.dateTo;
       }
-      
+
       if (filters.search) {
         paramIndex++;
         whereConditions.push(`(filename LIKE @search${paramIndex} OR file_hash LIKE @search${paramIndex})`);
         params[`search${paramIndex}`] = `%${filters.search}%`;
       }
-      
+
+      // Обычный пользователь видит только свои сканы; когда userId не передан
+      // (запрос от имени администратора) — возвращаются все сканы.
+      if (filters.userId) {
+        paramIndex++;
+        whereConditions.push(`user_id = @userId${paramIndex}`);
+        params[`userId${paramIndex}`] = filters.userId;
+      }
+
       const whereClause = whereConditions.join(' AND ');
-      
-      // Get total count
+
       const countQuery = `SELECT COUNT(*) as totalCount FROM dbo.Scans WHERE ${whereClause}`;
       const countResult = await db.query(countQuery, params);
       const totalCount = countResult.recordset[0]?.totalCount || 0;
-      
-      // Get paginated data
+
       const dataQuery = `
-        SELECT id, filename, file_hash, file_size, file_type, mime_type, verdict, risk_score, analysis_details, created_at, updated_at
+        SELECT id, filename, file_hash, file_size, file_type, mime_type, verdict, risk_score, analysis_details, user_id, created_at, updated_at
         FROM dbo.Scans
         WHERE ${whereClause}
         ORDER BY created_at DESC
         OFFSET @offset ROWS FETCH NEXT @limit ROWS ONLY
       `;
       const dataResult = await db.query(dataQuery, params);
-      
-      console.log('Scan.findAll result:', { count: dataResult.recordset.length, total: totalCount });
+
       return {
         scans: dataResult.recordset.map(this.formatScan),
         pagination: {
@@ -124,14 +132,14 @@ class Scan {
    */
   static async findById(id) {
     const result = await db.executeProcedure('sp_GetScanById', { scanId: id });
-    
+
     if (!result.recordsets[0] || result.recordsets[0].length === 0) {
       return null;
     }
-    
+
     const scan = this.formatScan(result.recordsets[0][0]);
     scan.events = (result.recordsets[1] || []).map(this.formatEvent);
-    
+
     return scan;
   }
 
@@ -155,28 +163,68 @@ class Scan {
       scanId: id,
       rowsAffected: { type: db.sql.Int, output: true }
     });
-    
+
     return result.output.rowsAffected > 0;
   }
 
   /**
-   * Get scan statistics using stored procedure
+   * Get scan statistics. Uses plain parameterised queries (rather than the
+   * SQL stored procs) specifically so the 30-day activity series can be
+   * pivoted by verdict and zero-filled for days with no scans in JS, and so
+   * the same code path can be scoped to a single user (userId) or return
+   * global stats for admins (userId omitted).
+   * @param {number|null} userId
    * @returns {Promise<Object>} Statistics
    */
-  static async getStats() {
-    const result = await db.executeProcedure('sp_GetDashboardStats');
-    
-    // Result contains multiple recordsets:
-    // 0: overall stats (fn_GetScanStats)
-    // 1: recent activity (fn_GetRecentActivity)
-    // 2: score distribution (fn_GetScoreDistribution)
-    
-    const overall = result.recordsets[0]?.[0] || {};
-    const recent = result.recordsets[1] || [];
-    const distribution = result.recordsets[2] || [];
-    
-    // Use the overall counters for the KPI cards. Recent activity is grouped
-    // by date + verdict and must not be used as the all-time total.
+  static async getStats(userId = null) {
+    const params = { userId: userId || null };
+
+    const overallResult = await db.query(
+      `SELECT
+         COUNT(*) AS total_scans,
+         SUM(CASE WHEN verdict = 'CRITICAL' THEN 1 ELSE 0 END) AS critical_count,
+         SUM(CASE WHEN verdict = 'HIGH' THEN 1 ELSE 0 END) AS high_count,
+         SUM(CASE WHEN verdict = 'MEDIUM' THEN 1 ELSE 0 END) AS medium_count,
+         SUM(CASE WHEN verdict = 'LOW' THEN 1 ELSE 0 END) AS low_count,
+         SUM(CASE WHEN verdict = 'CLEAN' THEN 1 ELSE 0 END) AS clean_count,
+         AVG(CAST(risk_score AS FLOAT)) AS avg_risk_score,
+         MAX(risk_score) AS max_risk_score
+       FROM dbo.Scans
+       WHERE (@userId IS NULL OR user_id = @userId)`,
+      params
+    );
+
+    const recentResult = await db.query(
+      `SELECT CAST(created_at AS DATE) AS scan_date, verdict, COUNT(*) AS scan_count
+       FROM dbo.Scans
+       WHERE created_at >= DATEADD(day, -29, CAST(SYSDATETIME() AS DATE))
+         AND (@userId IS NULL OR user_id = @userId)
+       GROUP BY CAST(created_at AS DATE), verdict`,
+      params
+    );
+
+    const distributionResult = await db.query(
+      `SELECT
+         CASE
+           WHEN risk_score >= 80 THEN 'CRITICAL'
+           WHEN risk_score >= 50 THEN 'HIGH'
+           WHEN risk_score >= 30 THEN 'MEDIUM'
+           ELSE 'LOW/CLEAN'
+         END AS score_range,
+         COUNT(*) AS scan_count
+       FROM dbo.Scans
+       WHERE (@userId IS NULL OR user_id = @userId)
+       GROUP BY
+         CASE
+           WHEN risk_score >= 80 THEN 'CRITICAL'
+           WHEN risk_score >= 50 THEN 'HIGH'
+           WHEN risk_score >= 30 THEN 'MEDIUM'
+           ELSE 'LOW/CLEAN'
+         END`,
+      params
+    );
+
+    const overall = overallResult.recordset[0] || {};
     const byVerdict = {
       CRITICAL: Number(overall.critical_count) || 0,
       HIGH: Number(overall.high_count) || 0,
@@ -184,25 +232,46 @@ class Scan {
       LOW: Number(overall.low_count) || 0,
       CLEAN: Number(overall.clean_count) || 0,
     };
-    
+
+    // Пивот "дата+вердикт -> счётчик" в карту для быстрого поиска.
+    const byDateVerdict = new Map();
+    for (const row of recentResult.recordset) {
+      const dateKey = new Date(row.scan_date).toISOString().slice(0, 10);
+      if (!byDateVerdict.has(dateKey)) byDateVerdict.set(dateKey, {});
+      byDateVerdict.get(dateKey)[row.verdict] = Number(row.scan_count) || 0;
+    }
+
+    // Строим ровно 30 точек (последние 30 дней, включая сегодня), заполняя
+    // отсутствующие дни нулями, чтобы линия на графике не обрывалась.
+    const recentActivity = [];
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setUTCDate(d.getUTCDate() - i);
+      const dateKey = d.toISOString().slice(0, 10);
+      const counts = byDateVerdict.get(dateKey) || {};
+      recentActivity.push({
+        date: dateKey,
+        clean: counts.CLEAN || 0,
+        low: counts.LOW || 0,
+        medium: counts.MEDIUM || 0,
+        high: counts.HIGH || 0,
+        critical: counts.CRITICAL || 0,
+        total: Object.values(counts).reduce((sum, v) => sum + v, 0),
+      });
+    }
+
     return {
       total: Number(overall.total_scans) || 0,
       byVerdict,
       averageRiskScore: Number(overall.avg_risk_score) || 0,
       maxRiskScore: Number(overall.max_risk_score) || 0,
-      recentActivity: recent.map(r => ({
-        date: r.scan_date instanceof Date ? r.scan_date.toISOString().slice(0, 10) : String(r.scan_date).slice(0, 10),
-        count: Number(r.scan_count) || 0,
-        clean: Number(r.clean_count) || 0,
-        low: Number(r.low_count) || 0,
-        medium: Number(r.medium_count) || 0,
-        high: Number(r.high_count) || 0,
-        critical: Number(r.critical_count) || 0
-      })),
-      scoreDistribution: distribution.map(d => ({
+      recentActivity,
+      scoreDistribution: distributionResult.recordset.map((d) => ({
         range: d.score_range,
-        count: d.scan_count
-      }))
+        count: d.scan_count,
+      })),
     };
   }
 
@@ -236,7 +305,6 @@ class Scan {
   static formatScan(row) {
     return {
       id: row.id,
-      userId: row.user_id,
       filename: row.filename,
       fileHash: row.file_hash,
       fileSize: row.file_size,
@@ -245,6 +313,7 @@ class Scan {
       verdict: row.verdict,
       riskScore: row.risk_score,
       analysisDetails: row.analysis_details ? JSON.parse(row.analysis_details) : null,
+      userId: row.user_id ?? null,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };

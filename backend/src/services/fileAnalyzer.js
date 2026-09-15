@@ -13,10 +13,10 @@ class FileAnalyzer {
     this.suspiciousPatterns = {
       // Общие паттерны для всех файлов
       general: [
-        { pattern: /cmd\.exe/gi, score: 10, description: 'Запуск командной оболочки' },
-        { pattern: /powershell\.exe/gi, score: 15, description: 'Запуск PowerShell' },
-        { pattern: /eval\(/gi, score: 20, description: 'Динамическое выполнение кода' },
-        { pattern: /child_process/gi, score: 15, description: 'Создание дочернего процесса' },
+        { pattern: /cmd\.exe/gi, score: 10, description: 'Command shell execution' },
+        { pattern: /powershell\.exe/gi, score: 15, description: 'PowerShell execution' },
+        { pattern: /eval\(/gi, score: 20, description: 'Dynamic code evaluation' },
+        { pattern: /child_process/gi, score: 15, description: 'Child process spawning' },
         { pattern: /CreateRemoteThread/gi, score: 25, description: 'Remote thread creation (injection)' },
         { pattern: /WriteProcessMemory/gi, score: 25, description: 'Process memory manipulation' },
         { pattern: /VirtualAllocEx/gi, score: 20, description: 'Memory allocation in remote process' },
@@ -32,8 +32,8 @@ class FileAnalyzer {
       
       // URL и IP адреса
       network: [
-        { pattern: /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi, score: 5, description: 'Обнаружен HTTP-адрес или URL' },
-        { pattern: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, score: 5, description: 'Обнаружен IPv4-адрес' },
+        { pattern: /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi, score: 5, description: 'HTTP/URL found' },
+        { pattern: /\b(?:\d{1,3}\.){3}\d{1,3}\b/g, score: 5, description: 'IPv4 address found' },
         { pattern: /\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b/g, score: 5, description: 'IPv6 address found' },
       ],
 
@@ -151,6 +151,7 @@ class FileAnalyzer {
       for (const { pattern, score, description } of categoryPatterns) {
         const matches = content.match(pattern);
         if (matches) {
+          const offset = content.search(pattern); // позиция первого совпадения в файле
           const finding = {
             category,
             pattern: pattern.source,
@@ -158,6 +159,7 @@ class FileAnalyzer {
             score: score * matches.length,
             matches: matches.length,
             matchExamples: matches.slice(0, 3),
+            offset: offset >= 0 ? offset : null,
           };
           results.findings.push(finding);
           results.riskScore += finding.score;
@@ -245,7 +247,7 @@ class FileAnalyzer {
       results.findings.push({
         category: 'entropy',
         pattern: 'high_entropy',
-        description: `Высокая энтропия файла (${entropy}), possible packing/encryption`,
+        description: `High entropy detected (${entropy}), possible packing/encryption`,
         score: 15,
         matches: 1,
         matchExamples: [`Entropy: ${entropy}`],

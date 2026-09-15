@@ -25,10 +25,10 @@ class ScanService {
    * @param {Array} files - Array of Multer file objects
    * @returns {Promise<Array>} Array of scan results
    */
-  async processMultipleFiles(files, user) {
+  async processMultipleFiles(files, userId = null) {
     const results = [];
     for (const file of files) {
-      const result = await this.processFile(file, user);
+      const result = await this.processFile(file, userId);
       results.push({ filename: file.originalname, ...result });
     }
     return results;
@@ -39,7 +39,7 @@ class ScanService {
    * @param {Object} file - Multer file object
    * @returns {Promise<Object>} Scan result
    */
-  async processFile(file, user) {
+  async processFile(file, userId = null) {
     const tempScanId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     try {
@@ -94,7 +94,8 @@ class ScanService {
         staticResults,
         staticDetection,
         storedEvents,
-        malwareType
+        malwareType,
+        userId
       );
 
       // Return the persisted result so the upload page/dashboard always has
@@ -130,7 +131,7 @@ class ScanService {
    * @param {string} malwareType - Detected malware type
    * @returns {Promise<Object>} Final scan result
    */
-  async completeScan(scanId, staticResults, staticDetection, behavioralEvents, malwareType) {
+  async completeScan(scanId, staticResults, staticDetection, behavioralEvents, malwareType, userId = null) {
     try {
       // Get stored behavioral events
       const storedEvents = this.behavioralEventsStore.get(scanId) || behavioralEvents || [];
@@ -167,7 +168,7 @@ class ScanService {
         verdict: finalResult.verdict,
         riskScore: finalResult.riskScore,
         analysisDetails,
-        userId: user?.id,
+        userId,
       });
       
       // Bulk insert behavioral events with REAL scan ID
@@ -221,9 +222,8 @@ class ScanService {
    * @param {number} id - Scan ID
    * @returns {Promise<Object|null>} Scan with events
    */
-  async getScanById(id, userId) {
+  async getScanById(id) {
     const scan = await Scan.findById(id);
-    if (scan && userId && Number(scan.userId) !== Number(userId)) return null;
     if (!scan) return null;
     
     const events = await ScanEvent.findByScanId(id);
@@ -235,9 +235,7 @@ class ScanService {
    * @param {number} id - Scan ID
    * @returns {Promise<boolean>} Success
    */
-  async deleteScan(id, userId) {
-    const scan = await Scan.findById(id);
-    if (!scan || (userId && Number(scan.userId) !== Number(userId))) return false;
+  async deleteScan(id) {
     return Scan.delete(id);
   }
 
@@ -245,13 +243,8 @@ class ScanService {
    * Get dashboard statistics
    * @returns {Promise<Object>} Statistics
    */
-  async getStats(userId) {
-    if (!userId) return Scan.getStats();
-    const result = await Scan.findAll({ userId, limit: 1, offset: 0 });
-    const scans = await Scan.findAll({ userId, limit: 100000, offset: 0 });
-    const byVerdict = {}; scans.scans.forEach(x => { byVerdict[x.verdict] = (byVerdict[x.verdict] || 0) + 1; });
-    const scores = scans.scans.map(x => Number(x.riskScore) || 0);
-    return { total: scans.pagination.total, byVerdict, averageRiskScore: scores.length ? scores.reduce((a,b)=>a+b,0)/scores.length : 0, maxRiskScore: scores.length ? Math.max(...scores) : 0, recentActivity: [], scoreDistribution: [] };
+  async getStats(userId = null) {
+    return Scan.getStats(userId);
   }
 
   /**

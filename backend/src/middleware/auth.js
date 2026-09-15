@@ -1,30 +1,75 @@
-const crypto = require('crypto');
-const sessions = new Map();
+// backend/src/middleware/auth.js
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+const User = require('../models/User');
 
-function createSession(user) {
-  const token = crypto.randomBytes(32).toString('hex');
-  sessions.set(token, { user, createdAt: Date.now() });
-  return token;
+const COOKIE_NAME = 'sandbox_token';
+
+function signToken(user) {
+  return jwt.sign(
+    { sub: user.id, email: user.email, role: user.role },
+    config.auth.jwtSecret,
+    { expiresIn: config.auth.jwtExpiresIn }
+  );
 }
 
-function getSession(req) {
-  const token = req.headers.authorization?.startsWith('Bearer ')
-    ? req.headers.authorization.slice(7)
-    : req.headers['x-session-token'];
-  return token ? sessions.get(token) : null;
+function setAuthCookie(res, token) {
+  res.cookie(COOKIE_NAME, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: config.nodeEnv === 'production',
+    maxAge: config.auth.cookieMaxAgeMs,
+    path: '/',
+  });
+}
+
+function clearAuthCookie(res) {
+  res.clearCookie(COOKIE_NAME, { path: '/' });
+}
+
+/**
+ * Читает JWT из cookie, если он есть и валиден — кладёт req.user.
+ * Не блокирует запрос при отсутствии/невалидности токена.
+ */
+async function attachUser(req, res, next) {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (!token) return next();
+
+  try {
+    const payload = jwt.verify(token, config.auth.jwtSecret);
+    const user = await User.findById(payload.sub);
+    if (user && !user.isBlocked) {
+      req.user = user;
+    }
+  } catch (_) {
+    // Невалидный/просроченный токен — просто считаем пользователя неавторизованным.
+  }
+  next();
 }
 
 function requireAuth(req, res, next) {
-  const session = getSession(req);
-  if (!session || session.user.is_blocked) return res.status(401).json({ success: false, error: 'Требуется вход' });
-  req.user = session.user;
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Требуется авторизация' });
+  }
   next();
 }
 
 function requireAdmin(req, res, next) {
-  if (req.user?.role !== 'admin') return res.status(403).json({ success: false, error: 'Недостаточно прав' });
+  if (!req.user) {
+    return res.status(401).json({ success: false, error: 'Требуется авторизация' });
+  }
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ success: false, error: 'Доступ только для администратора' });
+  }
   next();
 }
 
-function destroySession(token) { sessions.delete(token); }
-module.exports = { createSession, getSession, requireAuth, requireAdmin, destroySession };
+module.exports = {
+  COOKIE_NAME,
+  signToken,
+  setAuthCookie,
+  clearAuthCookie,
+  attachUser,
+  requireAuth,
+  requireAdmin,
+};

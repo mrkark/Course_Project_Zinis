@@ -1,20 +1,13 @@
 {
   "name": "malware-sandbox-platform",
-  "version": "1.0.0",
-  "description": "Malware Sandbox Platform - Full Stack",
+  "version": "2.0.0",
+  "description": "Malware Sandbox Platform — статический фронтенд (без Vite/Tailwind/Zustand/Recharts) + Express backend",
   "private": true,
   "scripts": {
-    "install:all": "npm install --prefix backend && npm install --prefix frontend",
-    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "build": "npm run build --prefix frontend",
-    "start": "npm run build && cross-env NODE_ENV=production npm start --prefix backend",
-    "start:prod": "cross-env NODE_ENV=production npm start --prefix backend",
-    "db:init": "sqlcmd -S localhost -U sa -P \"YourStrongPassword123\" -i backend/database.sql && sqlcmd -S localhost -U sa -P \"YourStrongPassword123\" -i backend/database_procedures.sql",
-    "db:init:mrkark": "sqlcmd -S localhost -U mrkark -P mrkark9000 -i backend/database.sql && sqlcmd -S localhost -U mrkark -P mrkark9000 -i backend/database_procedures.sql"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3"
+    "install:all": "npm install --prefix backend",
+    "dev": "npm run dev --prefix backend",
+    "start": "npm start --prefix backend",
+    "db:init": "sqlcmd -S localhost -U sa -P \"YourStrongPassword123\" -i backend/database.sql && sqlcmd -S localhost -U sa -P \"YourStrongPassword123\" -i backend/database_procedures.sql && sqlcmd -S localhost -U sa -P \"YourStrongPassword123\" -i backend/database_auth_sandbox.sql"
   },
   "engines": {
     "node": ">=18.0.0"

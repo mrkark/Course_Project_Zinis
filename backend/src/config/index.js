@@ -47,4 +47,21 @@ module.exports = {
       medium: parseInt(process.env.RISK_SCORE_MEDIUM) || 30,
     },
   },
+
+  auth: {
+    jwtSecret: process.env.JWT_SECRET || 'dev-only-insecure-secret-change-me',
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    cookieMaxAgeMs: parseInt(process.env.JWT_COOKIE_MAX_AGE_MS) || 7 * 24 * 60 * 60 * 1000,
+    bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS) || 10,
+    // Секретный ключ для одноразового создания первого администратора через
+    // POST /api/auth/bootstrap-admin (см. backend/README.md).
+    bootstrapAdminKey: process.env.BOOTSTRAP_ADMIN_KEY || '',
+  },
+
+  sandbox: {
+    // Только инертные текстовые файлы-образцы для клиентской песочницы.
+    // Никогда не исполняются на сервере.
+    samplesDir: path.resolve(__dirname, '..', '..', 'sandbox_samples'),
+    maxSampleSize: 64 * 1024, // 64KB достаточно для текстового образца
+  },
 };

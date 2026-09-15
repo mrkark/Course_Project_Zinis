@@ -3,8 +3,13 @@ const os = require('os');
 const db = require('../config/database');
 const { getAdminRuntimeState } = require('../socket/handlers');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { requireAdmin } = require('../middleware/auth');
+const User = require('../models/User');
 
 const router = express.Router();
+
+// Все роуты в этом файле — только для администратора.
+router.use(requireAdmin);
 
 router.get('/status', asyncHandler(async (req, res) => {
   const startedAt = process.env.SERVER_STARTED_AT ? Number(process.env.SERVER_STARTED_AT) : Date.now() - process.uptime() * 1000;
@@ -61,6 +66,53 @@ router.get('/status', asyncHandler(async (req, res) => {
       timestamp: new Date().toISOString(),
     },
   });
+}));
+
+/**
+ * GET /api/admin/users
+ * Список всех пользователей с числом их сканирований.
+ */
+router.get('/users', asyncHandler(async (req, res) => {
+  const users = await User.list();
+  res.json({ success: true, data: users });
+}));
+
+/**
+ * PATCH /api/admin/users/:id/block
+ * body: { blocked: boolean }
+ */
+router.patch('/users/:id/block', asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ success: false, error: 'Некорректный id' });
+  }
+  if (id === req.user.id) {
+    return res.status(400).json({ success: false, error: 'Нельзя заблокировать самого себя' });
+  }
+  const blocked = !!req.body?.blocked;
+  const user = await User.setBlocked(id, blocked);
+  if (!user) {
+    return res.status(404).json({ success: false, error: 'Пользователь не найден' });
+  }
+  res.json({ success: true, data: user });
+}));
+
+/**
+ * DELETE /api/admin/users/:id
+ */
+router.delete('/users/:id', asyncHandler(async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (Number.isNaN(id)) {
+    return res.status(400).json({ success: false, error: 'Некорректный id' });
+  }
+  if (id === req.user.id) {
+    return res.status(400).json({ success: false, error: 'Нельзя удалить самого себя' });
+  }
+  const deleted = await User.delete(id);
+  if (!deleted) {
+    return res.status(404).json({ success: false, error: 'Пользователь не найден' });
+  }
+  res.json({ success: true });
 }));
 
 module.exports = router;

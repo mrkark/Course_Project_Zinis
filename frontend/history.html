@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>История сканирований — Malware Sandbox Platform</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/layout.css">
+<link rel="stylesheet" href="/css/components.css">
+
+</head>
+<body data-page="history">
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="sidebar__brand">
+    <svg class="sidebar__brand-mark" viewBox="0 0 24 24" fill="none" stroke="var(--accent-500)" stroke-width="1.6"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+    <div class="sidebar__brand-text">Malware Sandbox<small>ANALYSIS PLATFORM</small></div>
+  </div>
+  <nav>
+    <div class="nav-section-label">Рабочая область</div>
+    <a class="nav-link" data-page="dashboard" href="/dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Дашборд</span></a>
+<a class="nav-link" data-page="upload" href="/upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><span>Загрузка файла</span></a>
+<a class="nav-link" data-page="live" href="/live.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg><span>Мониторинг</span></a>
+<a class="nav-link is-active" data-page="history" href="/history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>История</span></a>
+<a class="nav-link" data-page="threats" href="/threats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3z"/></svg><span>Справочник угроз</span></a>
+<a class="nav-link" data-page="sandbox" href="/sandbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 6 5 5-5 5"/><path d="M12 16h8"/></svg><span>Песочница</span></a>
+<a class="nav-link" data-page="users" href="/users.html" data-role="admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M15.8 14.2c2.6.4 4.7 2.5 4.7 5.8"/></svg><span>Пользователи</span></a>
+    <div class="nav-section-label" data-role="admin-only">Администрирование</div>
+    <a class="nav-link" data-role="admin-only" href="/admin" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span>Server monitor</span></a>
+  </nav>
+  <div class="sidebar__footer">Course Project · Zinis<br>v2.0</div>
+</aside>
+  <div class="main-col">
+    <header class="topbar">
+      <div>
+        <div class="topbar__eyebrow">SCAN HISTORY</div>
+        <div class="topbar__title">История сканирований</div>
+      </div>
+      <div class="topbar__user" id="topbar-user"></div>
+    </header>
+    <main class="content" id="page-content">
+
+      <div class="page-head">
+        <div>
+          <h1>История сканирований</h1>
+          <p>Полный список ваших сканирований с фильтрами по вердикту, дате и текстовому поиску.</p>
+        </div>
+        <div class="flex-row">
+          <a class="btn btn--ghost btn--sm" id="export-json">Экспорт JSON</a>
+          <a class="btn btn--ghost btn--sm" id="export-csv">Экспорт CSV</a>
+        </div>
+      </div>
+
+      <div class="toolbar panel">
+        <div class="field field--grow">
+          <label>Поиск по имени файла / hash</label>
+          <input type="search" id="f-search" placeholder="например, invoice.pdf">
+        </div>
+        <div class="field">
+          <label>Вердикт</label>
+          <select id="f-verdict">
+            <option value="">Все</option>
+            <option value="CLEAN">Clean</option>
+            <option value="LOW">Low</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HIGH">High</option>
+            <option value="CRITICAL">Critical</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>С даты</label>
+          <input type="text" id="f-from" placeholder="ГГГГ-ММ-ДД" onfocus="(this.type='date')">
+        </div>
+        <div class="field">
+          <label>По дату</label>
+          <input type="text" id="f-to" placeholder="ГГГГ-ММ-ДД" onfocus="(this.type='date')">
+        </div>
+      </div>
+
+      <div class="panel">
+        <div id="history-table"><div class="skeleton" style="height:300px"></div></div>
+        <div class="flex-row" style="justify-content:space-between;margin-top:14px">
+          <div class="text-muted" id="history-count" style="font-size:12px"></div>
+          <div class="flex-row">
+            <button class="btn btn--ghost btn--sm" id="prev-page">← Назад</button>
+            <span class="mono text-secondary" id="page-indicator" style="font-size:12px"></span>
+            <button class="btn btn--ghost btn--sm" id="next-page">Вперёд →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="delete-modal" class="modal-overlay hidden">
+        <div class="modal">
+          <h3>Удалить сканирование?</h3>
+          <p style="margin-bottom:0">Это действие необратимо. Запись и связанные события будут удалены.</p>
+          <div class="modal__actions">
+            <button class="btn btn--ghost btn--sm" id="cancel-delete">Отмена</button>
+            <button class="btn btn--danger btn--sm" id="confirm-delete">Удалить</button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="/js/utils.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/history.js"></script>
+</body>
+</html>

@@ -1,0 +1,81 @@
+/*
+  Дизайн-токены платформы.
+  Палитра "инженерная консоль": холодный графит + один спокойный акцент,
+  вердикты различаются собственной семантической шкалой цветов.
+  Никаких фиолетово-синих градиентов и "парящих" карточек с тенями.
+*/
+:root {
+  /* Поверхности */
+  --surface-0: #12161b;   /* фон приложения */
+  --surface-1: #181d24;   /* сайдбар / topbar */
+  --surface-2: #1e242c;   /* панели, карточки */
+  --surface-3: #262e38;   /* приподнятые/hover-элементы */
+  --surface-inset: #0d1013; /* поля ввода, code area */
+
+  /* Границы */
+  --border-subtle: #2a323d;
+  --border-strong: #3a4451;
+
+  /* Текст */
+  --text-primary: #e7ebef;
+  --text-secondary: #9aa5b1;
+  --text-muted: #6b7684;
+  --text-on-accent: #06121a;
+
+  /* Акцент бренда — приглушённый холодный циан, не "AI-фиолетовый" */
+  --accent-500: #3fa7a0;
+  --accent-400: #58bdb5;
+  --accent-600: #2c8981;
+  --accent-soft: rgba(63, 167, 160, 0.14);
+
+  /* Семантика вердиктов угроз */
+  --verdict-clean: #4caf7d;
+  --verdict-low: #7fb84f;
+  --verdict-medium: #d9a441;
+  --verdict-high: #e07a3f;
+  --verdict-critical: #d5493d;
+
+  --verdict-clean-bg: rgba(76, 175, 125, 0.14);
+  --verdict-low-bg: rgba(127, 184, 79, 0.14);
+  --verdict-medium-bg: rgba(217, 164, 65, 0.14);
+  --verdict-high-bg: rgba(224, 122, 63, 0.14);
+  --verdict-critical-bg: rgba(213, 73, 61, 0.16);
+
+  --danger: #d5493d;
+  --danger-bg: rgba(213, 73, 61, 0.14);
+  --success: #4caf7d;
+  --warning: #d9a441;
+
+  /* Типографика */
+  --font-display: 'IBM Plex Sans Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.625rem;
+  --fs-2xl: 2rem;
+
+  /* Радиусы — маленькие, "инженерные", не rounded-2xl */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+
+  /* Отступы */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  --sidebar-width: 236px;
+  --topbar-height: 56px;
+
+  --shadow-none: none;
+  --focus-ring: 0 0 0 2px var(--surface-0), 0 0 0 4px var(--accent-500);
+}

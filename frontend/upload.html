@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Загрузка и анализ — Malware Sandbox Platform</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/layout.css">
+<link rel="stylesheet" href="/css/components.css">
+
+</head>
+<body data-page="upload">
+<div class="app-shell">
+<aside class="sidebar">
+  <div class="sidebar__brand">
+    <svg class="sidebar__brand-mark" viewBox="0 0 24 24" fill="none" stroke="var(--accent-500)" stroke-width="1.6"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+    <div class="sidebar__brand-text">Malware Sandbox<small>ANALYSIS PLATFORM</small></div>
+  </div>
+  <nav>
+    <div class="nav-section-label">Рабочая область</div>
+    <a class="nav-link" data-page="dashboard" href="/dashboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Дашборд</span></a>
+<a class="nav-link is-active" data-page="upload" href="/upload.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><span>Загрузка файла</span></a>
+<a class="nav-link" data-page="live" href="/live.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 8-6-16-3 8H2"/></svg><span>Мониторинг</span></a>
+<a class="nav-link" data-page="history" href="/history.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span>История</span></a>
+<a class="nav-link" data-page="threats" href="/threats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3z"/></svg><span>Справочник угроз</span></a>
+<a class="nav-link" data-page="sandbox" href="/sandbox.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m4 6 5 5-5 5"/><path d="M12 16h8"/></svg><span>Песочница</span></a>
+<a class="nav-link" data-page="users" href="/users.html" data-role="admin-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><circle cx="17.5" cy="9.5" r="2.4"/><path d="M15.8 14.2c2.6.4 4.7 2.5 4.7 5.8"/></svg><span>Пользователи</span></a>
+    <div class="nav-section-label" data-role="admin-only">Администрирование</div>
+    <a class="nav-link" data-role="admin-only" href="/admin" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg><span>Server monitor</span></a>
+  </nav>
+  <div class="sidebar__footer">Course Project · Zinis<br>v2.0</div>
+</aside>
+  <div class="main-col">
+    <header class="topbar">
+      <div>
+        <div class="topbar__eyebrow">UPLOAD / SCAN</div>
+        <div class="topbar__title">Загрузка и анализ</div>
+      </div>
+      <div class="topbar__user" id="topbar-user"></div>
+    </header>
+    <main class="content" id="page-content">
+
+      <div class="page-head">
+        <div>
+          <h1>Загрузка и анализ файла</h1>
+          <p>Файл анализируется статически (сигнатуры, энтропия, hash) и проходит поведенческую эмуляцию. Никакой код из загруженного файла не исполняется.</p>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:20px">
+        <div class="dropzone" id="dropzone">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          <div><b>Перетащите файл сюда</b> или нажмите, чтобы выбрать</div>
+          <div class="text-muted" id="dropzone-hint" style="font-size:12px;margin-top:6px">Загрузка конфигурации…</div>
+          <input type="file" id="file-input" class="hidden">
+        </div>
+
+        <div id="selected-file" class="hidden" style="margin-top:16px">
+          <div class="flex-row" style="justify-content:space-between">
+            <div class="mono" id="selected-file-name" style="font-size:13px"></div>
+            <button class="btn btn--primary btn--sm" id="scan-btn">Проверить файл</button>
+          </div>
+          <div class="progress hidden" id="upload-progress" style="margin-top:10px">
+            <div class="progress__bar" id="upload-progress-bar" style="width:0%"></div>
+          </div>
+          <div class="text-muted" id="upload-status" style="font-size:12px;margin-top:6px"></div>
+        </div>
+      </div>
+
+      <div id="result-panel"></div>
+
+    </main>
+  </div>
+</div>
+
+<script src="/js/utils.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/pages/upload.js"></script>
+</body>
+</html>

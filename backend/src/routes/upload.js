@@ -68,7 +68,7 @@ router.post('/', upload.single('file'), validateFileUpload, asyncHandler(async (
   const scanService = req.app.get('scanService');
   
   try {
-    const result = await scanService.processFile(req.file, req.user);
+    const result = await scanService.processFile(req.file, req.user.id);
     
     res.json({
       success: true,
@@ -98,7 +98,7 @@ router.post('/multiple', upload.array('files', 10), validateFileUpload, asyncHan
     
     const results = [];
     for (const file of files) {
-      const result = await scanService.processFile(file, req.user);
+      const result = await scanService.processFile(file, req.user.id);
       results.push({ filename: file.originalname, ...result });
     }
     

@@ -5,22 +5,24 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
 const config = require('./src/config');
 const { requestLogger } = require('./src/middleware/logger');
 const { errorHandler, notFoundHandler, asyncHandler } = require('./src/middleware/errorHandler');
+const { attachUser, requireAuth } = require('./src/middleware/auth');
 const { setupSocketHandlers } = require('./src/socket/handlers');
 const ScanService = require('./src/services/scanService');
 
 // Routes
+const authRoutes = require('./src/routes/auth');
 const uploadRoutes = require('./src/routes/upload');
 const scansRoutes = require('./src/routes/scans');
 const threatsRoutes = require('./src/routes/threats');
 const adminRoutes = require('./src/routes/admin');
-const authRoutes = require('./src/routes/auth');
-const { requireAuth } = require('./src/middleware/auth');
+const sandboxRoutes = require('./src/routes/sandbox');
 
 // Initialize Express app
 console.log('🚀 Starting server initialization...');
@@ -46,7 +48,9 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(requestLogger);
+app.use(attachUser); // кладёт req.user, если есть валидный JWT в cookie
 
 // Static files for uploads
 app.use('/uploads', express.static(path.join(__dirname, config.upload.dir)));
@@ -62,49 +66,46 @@ console.log('🔄 Setting up Socket.IO handlers...');
 setupSocketHandlers(io, scanService);
 console.log('✅ Socket.IO handlers setup');
 
-// Health check
+// Health check (публичный)
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
+  res.json({
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
   });
 });
 
-// API Routes
+// Auth — публичные роуты (свои проверки прав внутри, где нужно)
 app.use('/api/auth', authRoutes);
+
+// Защищённые API роуты — доступны только авторизованным пользователям.
+// threats остаётся публичным справочником (не содержит персональных данных).
+app.use('/api/threats', threatsRoutes);
 app.use('/api/upload', requireAuth, uploadRoutes);
 app.use('/api/scans', requireAuth, scansRoutes);
-app.use('/api/threats', requireAuth, threatsRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/sandbox', sandboxRoutes); // сам проверяет requireAuth внутри
+app.use('/api/admin', adminRoutes); // сам проверяет requireAdmin внутри
 
-// Admin monitor page - serve at /admin on port 3000
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-// Admin page assets
-app.use('/admin', express.static(path.join(__dirname, 'public')));
-
-// ========== NEW: Complete scan endpoint ==========
-app.post('/api/upload/complete', asyncHandler(async (req, res) => {
+// ========== Complete scan endpoint ==========
+app.post('/api/upload/complete', requireAuth, asyncHandler(async (req, res) => {
   const scanService = req.app.get('scanService');
   const { tempScanId, staticResults, staticDetection, behavioralEvents, malwareType } = req.body;
-  
+
   if (!tempScanId) {
     return res.status(400).json({ success: false, error: 'tempScanId required' });
   }
-  
+
   try {
     const result = await scanService.completeScan(
       tempScanId,
       staticResults,
       staticDetection,
       behavioralEvents || [],
-      malwareType
+      malwareType,
+      req.user.id
     );
-    
+
     res.json({
       success: true,
       message: 'Scan completed and saved to database',
@@ -116,52 +117,42 @@ app.post('/api/upload/complete', asyncHandler(async (req, res) => {
   }
 }));
 
-// Serve frontend - different for dev vs prod
-const isProduction = config.nodeEnv === 'production';
-const frontendDist = path.resolve(__dirname, '..', 'frontend', 'dist');
+// Admin monitor page — отдаём только администратору, иначе редирект на логин.
+app.get('/admin', (req, res) => {
+  if (!req.user) return res.redirect('/login.html?next=/admin');
+  if (req.user.role !== 'admin') return res.status(403).send('Доступ только для администратора');
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+app.use('/admin', (req, res, next) => {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).end();
+  next();
+}, express.static(path.join(__dirname, 'public')));
 
-if (isProduction) {
-  // Production: serve built React app from dist/
-  console.log(`📁 Serving frontend from: ${frontendDist}`);
-  if (fs.existsSync(frontendDist)) {
-    app.use(express.static(frontendDist));
-    
-    // SPA fallback - serve index.html for all non-API routes
-    app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/socket.io') || req.path.startsWith('/admin')) {
-        return next();
-      }
-      res.sendFile(path.join(frontendDist, 'index.html'), (err) => {
-        if (err) {
-          console.error('❌ sendFile error:', err);
-          res.status(404).send('Frontend not built. Run "npm run build" in frontend folder.');
-        }
-      });
-    });
-  } else {
-    console.warn('⚠️ Frontend dist not found. Run "npm run build" in frontend folder.');
-    app.get('*', (req, res, next) => {
-      if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/socket.io') || req.path.startsWith('/admin')) {
-        return next();
-      }
-      res.status(404).send('Frontend not built. Run "npm run build" in frontend folder.');
-    });
-  }
-} else {
-  // Development: redirect to Vite dev server
-  console.log('🔧 Development mode: Frontend served by Vite at http://localhost:5173');
-  
-  app.get('/', (req, res) => {
-    res.redirect('http://localhost:5173');
-  });
-  
-  // Redirect non-API routes to Vite dev server
+// Frontend: обычные статические файлы (без Vite и сборки).
+// Express отдаёт их напрямую — и в dev, и в prod это один и тот же код.
+const frontendDir = path.resolve(__dirname, '..', 'frontend');
+
+if (fs.existsSync(frontendDir)) {
+  console.log(`📁 Serving frontend from: ${frontendDir}`);
+  app.use(express.static(frontendDir));
+
+  // Многостраничный сайт: каждая страница — отдельный .html файл,
+  // SPA-fallback не нужен. Отдаём 404-страницу для неизвестных путей.
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/uploads') || req.path.startsWith('/socket.io') || req.path.startsWith('/admin')) {
+    if (
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/uploads') ||
+      req.path.startsWith('/socket.io') ||
+      req.path.startsWith('/admin')
+    ) {
       return next();
     }
-    res.redirect('http://localhost:5173' + req.path);
+    res.status(404).sendFile(path.join(frontendDir, '404.html'), (err) => {
+      if (err) res.status(404).send('Страница не найдена');
+    });
   });
+} else {
+  console.warn('⚠️ Папка frontend не найдена рядом с backend.');
 }
 
 // 404 handler
@@ -173,24 +164,20 @@ app.use(errorHandler);
 // Graceful shutdown
 async function shutdown() {
   console.log('🛑 Shutting down gracefully...');
-  
-  // Close Socket.IO
+
   io.close(() => {
     console.log('🔌 Socket.IO closed');
   });
-  
-  // Close HTTP server
+
   server.close(async () => {
     console.log('🌐 HTTP server closed');
-    
-    // Close database pool
+
     const db = require('./src/config/database');
     await db.closePool();
-    
+
     process.exit(0);
   });
-  
-  // Force close after 10 seconds
+
   setTimeout(() => {
     console.error('❌ Forced shutdown after timeout');
     process.exit(1);
@@ -211,7 +198,6 @@ server.listen(config.port, () => {
 ║  🔌  Socket.IO enabled                                     ║
 ║  🗄️  Database: ${config.db.database} @ ${config.db.server}:${config.db.port}          ║
 ║  📁  Uploads: ${config.upload.dir}                              ║
-║  🌍  Frontend: ${config.frontend.url}                            ║
 ║  🏗️  Environment: ${config.nodeEnv}                                  ║
 ║  📊  Admin Monitor: http://localhost:${config.port}/admin           ║
 ╚═══════════════════════════════════════════════════════════════╝

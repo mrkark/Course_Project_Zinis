@@ -16,13 +16,10 @@
 - **Multer** для загрузки файлов
 
 ### Frontend
-- **React 18** + **Vite**
-- **Tailwind CSS** для стилизации
-- **Zustand** для управления состоянием
-- **React Router** для навигации
-- **Recharts** для графиков
-- **Axios** для HTTP запросов
-- **Socket.IO Client** для WebSocket
+- **Обычные статические файлы**: HTML + CSS + vanilla JS, без сборщика (Vite/webpack не используются)
+- Без Tailwind, Zustand и Recharts — стили в `frontend/css/*.css`, графики — свой лёгкий SVG-рендерер (`frontend/js/charts.js`)
+- Socket.IO Client подключается напрямую через `<script src="/socket.io/socket.io.js">`
+- Подробности всех изменений и новых возможностей (auth, песочница, отчёты, фикс графика) — см. `CHANGES.md`
 
 ## 📁 Структура проекта
 
@@ -30,42 +27,37 @@
 Course_Project_Zinis/
 ├── backend/
 │   ├── src/
-│   │   ├── config/         # Конфигурация (DB, upload, analysis)
-│   │   ├── controllers/    # Контроллеры (пока пусты, логика в сервисах)
-│   │   ├── middleware/     # Валидация, ошибки, логирование
-│   │   ├── models/         # Модели БД (Scan, Threat, ScanEvent)
-│   │   ├── routes/         # API маршруты (upload, scans, threats)
+│   │   ├── config/         # Конфигурация (DB, upload, analysis, auth)
+│   │   ├── middleware/     # Валидация, ошибки, логирование, auth (JWT-cookie)
+│   │   ├── models/         # Модели БД (Scan, Threat, ScanEvent, User, SandboxRun)
+│   │   ├── routes/         # API маршруты (auth, upload, scans, threats, admin, sandbox)
 │   │   ├── services/       # Бизнес-логика (analyzer, emulator, detector, scanService)
 │   │   ├── socket/         # Socket.IO хендлеры
-│   │   └── utils/          # Утилиты
+│   │   └── utils/
 │   ├── uploads/            # Временная папка для загрузок
-│   ├── database.sql        # SQL схема БД
-│   ├── server.js           # Точка входа
+│   ├── sandbox_samples/    # Инертные тестовые образцы для «Песочницы»
+│   ├── database.sql / database_procedures.sql / database_auth_sandbox.sql
+│   ├── server.js
 │   ├── package.json
-│   └── .env.example        # Пример конфигурации
+│   └── .env.example
 │
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── ui/         # Базовые UI компоненты
-    │   │   ├── charts/     # Графики (Recharts)
-    │   │   ├── forms/      # Формы (FileUpload)
-    │   │   └── layout/     # Layout компоненты (Navbar, MainLayout)
-    │   ├── pages/          # Страницы (Dashboard, Upload, Live, Threats, History, Details)
-    │   ├── store/          # Zustand stores
-    │   ├── services/       # API клиент, Socket.IO сервис
-    │   ├── hooks/          # Кастомные хуки
-    │   ├── utils/          # Утилиты
-    │   ├── App.jsx         # Роутинг
-    │   ├── main.jsx        # Точка входа
-    │   └── index.css       # Tailwind + кастомные стили
-    ├── public/
-    ├── index.html
-    ├── package.json
-    ├── vite.config.js
-    ├── tailwind.config.js
-    └── postcss.config.js
+└── frontend/               # Статический сайт, без build-шага
+    ├── index.html          # Логин (публичная страница)
+    ├── register.html
+    ├── dashboard.html
+    ├── upload.html
+    ├── live.html
+    ├── history.html
+    ├── scan-details.html
+    ├── threats.html
+    ├── sandbox.html
+    ├── users.html          # только для role=admin
+    ├── css/                # tokens / base / layout / components
+    ├── js/                 # api.js, nav.js (auth-guard), charts.js, socket.js,
+    │                       # sandbox-worker.js (Web Worker), js/pages/*.js
+    └── assets/
 ```
+
 
 ## 🚀 Быстрый старт
 
@@ -75,9 +67,11 @@ Course_Project_Zinis/
 
 ```bash
 # 1. Создайте базу данных и таблицы
-# Выполните скрипт backend/database.sql в SSMS или sqlcmd
+# Выполните по порядку: database.sql -> database_procedures.sql -> database_auth_sandbox.sql
 
 sqlcmd -S localhost -U sa -P "YourStrongPassword123" -i backend/database.sql
+sqlcmd -S localhost -U sa -P "YourStrongPassword123" -i backend/database_procedures.sql
+sqlcmd -S localhost -U sa -P "YourStrongPassword123" -i backend/database_auth_sandbox.sql
 ```
 
 ### 2. Настройка переменных окружения
@@ -87,40 +81,38 @@ cd backend
 cp .env.example .env
 # Отредактируйте .env под вашу среду:
 # - DB_SERVER, DB_PORT, DB_DATABASE, DB_USER, DB_PASSWORD
-# - FRONTEND_URL (по умолчанию http://localhost:5173)
+# - FRONTEND_URL (по умолчанию http://localhost:3000 — фронтенд отдаётся тем же сервером)
+# - JWT_SECRET (обязательно смените на длинную случайную строку)
+# - BOOTSTRAP_ADMIN_KEY (см. шаг 5 — создание первого администратора)
 ```
 
 ### 3. Установка зависимостей
 
 ```bash
-# Backend
 cd backend
 npm install
-
-# Frontend
-cd ../frontend
-npm install
 ```
+Фронтенд — обычные статические файлы, ставить туда нечего: `npm run dev`/`npm start` в backend уже раздаёт папку `frontend/` напрямую.
 
-### 4. Запуск в режиме разработки
+### 4. Запуск
 
-**Терминал 1 - Backend:**
 ```bash
-cd backend
 npm run dev
-# Запускается на http://localhost:3000
+# Backend + статический фронтенд — оба на http://localhost:3000
 ```
 
-**Терминал 2 - Frontend:**
+### 5. Открыть в браузере и создать администратора
+
+Перейдите на **http://localhost:3000** — откроется страница входа.
+
+Первый администратор создаётся один раз через `bootstrap-admin` (пока задан `BOOTSTRAP_ADMIN_KEY` в `.env`):
 ```bash
-cd frontend
-npm run dev
-# Запускается на http://localhost:5173
+curl -X POST http://localhost:3000/api/auth/bootstrap-admin \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"ChangeMe123!","key":"<значение BOOTSTRAP_ADMIN_KEY>"}'
 ```
-
-### 5. Открыть в браузере
-
-Перейдите на **http://localhost:5173**
+После этого рекомендуется очистить `BOOTSTRAP_ADMIN_KEY` в `.env` — endpoint откажет, если админ уже есть.
+Обычные пользователи регистрируются через форму на `/register.html`.
 
 ## 📋 Функциональность
 

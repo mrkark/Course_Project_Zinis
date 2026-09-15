@@ -1,13 +1,89 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Песочница анализа вредоносных файлов</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вход — Malware Sandbox Platform</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/tokens.css">
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/layout.css">
+<link rel="stylesheet" href="/css/components.css">
+</head>
+<body data-page="login" data-public="true">
+
+<div class="auth-screen">
+  <div class="auth-screen__side">
+    <div>
+      <div class="flex-row" style="gap:10px;margin-bottom:32px">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent-500)" stroke-width="1.6"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
+        <div class="sidebar__brand-text" style="font-size:16px">Malware Sandbox<br><small>Учебная платформа анализа ВПО</small></div>
+      </div>
+      <h1 style="font-size:1.4rem">Статический анализ и поведенческая эмуляция файлов</h1>
+      <p>Платформа для загрузки файлов, статического сигнатурного анализа, поведенческой симуляции и ведения истории сканирований по ролям.</p>
+    </div>
+    <ul class="feature-list">
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Статический анализ без исполнения файлов</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Поведенческая эмуляция в реальном времени</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Ролевой доступ: пользователь / администратор</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Песочница для тестирования собственных сигнатур</li>
+    </ul>
+  </div>
+
+  <div class="auth-screen__form-col">
+    <div class="auth-card">
+      <h1>Вход в систему</h1>
+      <p class="lede">Учебный проект. Используйте свой аккаунт или зарегистрируйтесь.</p>
+
+      <div class="form-error" id="form-error"></div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email" placeholder="user@example.com">
+        </div>
+        <div class="field">
+          <label for="password">Пароль</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <button class="btn btn--primary btn--block" type="submit" id="login-submit">Войти</button>
+      </form>
+
+      <p style="margin-top:20px;font-size:13px">Нет аккаунта? <a href="/register.html">Зарегистрироваться</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/utils.js"></script>
+<script src="/js/api.js"></script>
+<script>
+(async function () {
+  // Если уже авторизован — сразу в дашборд
+  try {
+    const res = await authApi.me();
+    if (res.data) { location.href = '/dashboard.html'; return; }
+  } catch (_) {}
+
+  const form = document.getElementById('login-form');
+  const errorBox = document.getElementById('form-error');
+  const submitBtn = document.getElementById('login-submit');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorBox.textContent = '';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Вхожу…';
+    try {
+      await authApi.login(document.getElementById('email').value.trim(), document.getElementById('password').value);
+      const params = new URLSearchParams(location.search);
+      location.href = params.get('next') || '/dashboard.html';
+    } catch (err) {
+      errorBox.textContent = extractErrorMessage(err);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Войти';
+    }
+  });
+})();
+</script>
+</body>
 </html>
