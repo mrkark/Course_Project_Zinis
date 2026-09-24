@@ -1,226 +1,185 @@
-# Malware Sandbox Platform — Educational Project
+<p align="center">
+  <img src="docs/images/banner.svg" alt="Malware Sandbox Platform Banner" width="100%">
+</p>
 
-Демонстрационная платформа моделирования вредоносного поведения и детекции вредоносного кода (учебная песочница).
+<p align="center">
+  <a href="#-технологический-стек"><img src="https://img.shields.io/badge/Node.js-18%2B-22c55e?style=for-the-badge&logo=node.js&logoColor=white" alt="Node.js"></a>
+  <a href="#-технологический-стек"><img src="https://img.shields.io/badge/Express-4.19-22d3ee?style=for-the-badge&logo=express&logoColor=white" alt="Express"></a>
+  <a href="#-технологический-стек"><img src="https://img.shields.io/badge/MSSQL-2019%2B-f59e0b?style=for-the-badge&logo=microsoftsqlserver&logoColor=white" alt="MSSQL"></a>
+  <a href="#-технологический-стек"><img src="https://img.shields.io/badge/Socket.IO-4.7-a855f7?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.IO"></a>
+  <a href="#-технологический-стек"><img src="https://img.shields.io/badge/UI-Cyber_HUD-38bdf8?style=for-the-badge" alt="Cyber HUD"></a>
+  <a href="#-лицензия"><img src="https://img.shields.io/badge/License-Educational-gray?style=for-the-badge" alt="License"></a>
+</p>
 
-## ⚠️ Важное предупреждение
+---
 
-**Это НЕ реальная песочница для запуска вредоносного ПО.**  
-Вредоносный код **НЕ исполняется**. Проект **моделирует (симулирует)** поведение ВПО: генерирует события, логи, метрики. Это учебный проект, но архитектура выполнена "как в проде".
+## 📌 О проекте
 
-## 🛠 Технологический стек
+**Malware Sandbox Platform** — учебно-исследовательская платформа моделирования вредоносного поведения, статического сигнатурного анализа и вычисления комплексного показателя риска (**Risk Score**) для подозрительных файлов.
 
-### Backend
-- **Node.js + Express** (CommonJS)
-- **MSSQL** (драйвер `mssql`)
-- **Socket.IO** для real-time коммуникации
-- **Multer** для загрузки файлов
+> [!IMPORTANT]
+> **Это демонстрационная и учебная система.**  
+> Вредоносный код **НЕ исполняется** в операционной системе сервера. Платформа анализирует структуру файла, ищет подозрительные маркеры и **симулирует поведение** различных классов вредоносного ПО (Ransomware, Worm, Trojan, Keylogger, Backdoor, Adware), генерируя потоки телеметрии в реальном времени через WebSockets.
 
-### Frontend
-- **Обычные статические файлы**: HTML + CSS + vanilla JS, без сборщика (Vite/webpack не используются)
-- Без Tailwind, Zustand и Recharts — стили в `frontend/css/*.css`, графики — свой лёгкий SVG-рендерер (`frontend/js/charts.js`)
-- Socket.IO Client подключается напрямую через `<script src="/socket.io/socket.io.js">`
-- Подробности всех изменений и новых возможностей (auth, песочница, отчёты, фикс графика) — см. `CHANGES.md`
+---
 
-## 📁 Структура проекта
+## 🖥️ Интерфейс и возможности
+
+<p align="center">
+  <img src="docs/images/dashboard_preview.svg" alt="Dashboard & Live Monitoring Preview" width="100%">
+</p>
+
+### Ключевые возможности:
+* **Интерактивный дашборд:** KPI-сводка по вердиктам, график активности сканирований за 30 дней с автоматическим zero-fill дней, круговая диаграмма распределения угроз.
+* **Статический анализ:** Подсчёт энтропии Шеннона, вычисление хэша SHA-256, эвристический поиск опасных API-функций, адресов C&C, сетевых команд и шелл-скриптов.
+* **Поведенческая эмуляция (Live):** Трансляция событий жизненного цикла вредоноса в реальном времени через Socket.IO в стилизованный терминал.
+* **Изолированная песочница правил:** Запуск пользовательских правил детекции на JavaScript в браузере через изолированный `Web Worker` с перехватом сетевых API и таймаутом выполнения 3 секунды.
+* **Справочник угроз (Threat Library):** Оптимизированный каталог типов угроз с кэшированием `0ms` (Stale-While-Revalidate в `sessionStorage`) и детальными чипами весовых коэффициентов.
+* **Аутентификация и роли (RBAC):** Защищённые JWT-cookie (HttpOnly), разграничение доступа для `user` (только свои сканы) и `admin` (управление пользователями, серверный монитор, доступ ко всем данным).
+
+---
+
+## 📐 Архитектура системы
+
+<p align="center">
+  <img src="docs/images/architecture.svg" alt="System Architecture Diagram" width="100%">
+</p>
+
+Платформа построена по трёхуровневой клиент-серверной архитектуре:
+
+```mermaid
+flowchart LR
+    subgraph Client["Клиент (Браузер)"]
+        UI["HUD Интерфейс"]
+        Worker["Web Worker Sandbox"]
+        SocketC["Socket.IO Client"]
+    end
+
+    subgraph Server["Сервер (Node.js / Express)"]
+        Router["API Routes & Static Host"]
+        ScanSvc["ScanService"]
+        Analyzer["Static Analyzer"]
+        Emulator["Behavioral Emulator"]
+        Detector["Risk Score Engine"]
+        SocketS["Socket.IO Server"]
+    end
+
+    subgraph DB["База Данных (MSSQL)"]
+        T_Scans["dbo.Scans"]
+        T_Events["dbo.ScanEvents"]
+        T_Threats["dbo.Threats"]
+        T_Users["dbo.Users"]
+        T_Runs["dbo.SandboxRuns"]
+    end
+
+    UI -->|HTTP / Fetch| Router
+    UI <-->|WebSocket Real-Time| SocketS
+    UI -->|Code Exec| Worker
+    Router --> ScanSvc
+    ScanSvc --> Analyzer
+    ScanSvc --> Emulator
+    Emulator --> Detector
+    Detector --> SocketS
+    ScanSvc --> DB
+```
+
+---
+
+## 📚 Справочник угроз и Risk Score
+
+<p align="center">
+  <img src="docs/images/threat_cards.svg" alt="Threat Library Cards Preview" width="100%">
+</p>
+
+Каждый класс угрозы содержит весовую матрицу детекции. При совпадении признаков суммируются баллы риска:
+
+| Вердикт | Диапазон баллов | Действие системы |
+| :--- | :---: | :--- |
+| <span style="color:#ff4d4d;font-weight:bold">CRITICAL</span> | `80 – 100` | Немедленная блокировка, критический алерт в реальном времени |
+| <span style="color:#ff9640;font-weight:bold">HIGH</span> | `50 – 79` | Высокая степень опасности, обнаружены явные вредоносные маркеры |
+| <span style="color:#eab308;font-weight:bold">MEDIUM</span> | `30 – 49` | Подозрительное поведение (рекламные инъекции, трекинг) |
+| <span style="color:#38bdf8;font-weight:bold">LOW</span> | `1 – 29` | Низкий уровень риска, единичные предупреждения |
+| <span style="color:#22c55e;font-weight:bold">CLEAN</span> | `0` | Признаков вредоносной активности не обнаружено |
+
+---
+
+## 📁 Структура репозитория
 
 ```
 Course_Project_Zinis/
-├── backend/
+├── backend/                        # Серверная часть
 │   ├── src/
-│   │   ├── config/         # Конфигурация (DB, upload, analysis, auth)
-│   │   ├── middleware/     # Валидация, ошибки, логирование, auth (JWT-cookie)
-│   │   ├── models/         # Модели БД (Scan, Threat, ScanEvent, User, SandboxRun)
-│   │   ├── routes/         # API маршруты (auth, upload, scans, threats, admin, sandbox)
-│   │   ├── services/       # Бизнес-логика (analyzer, emulator, detector, scanService)
-│   │   ├── socket/         # Socket.IO хендлеры
-│   │   └── utils/
-│   ├── uploads/            # Временная папка для загрузок
-│   ├── sandbox_samples/    # Инертные тестовые образцы для «Песочницы»
-│   ├── database.sql / database_procedures.sql / database_auth_sandbox.sql
-│   ├── server.js
-│   ├── package.json
-│   └── .env.example
+│   │   ├── config/                 # Конфигурация БД (MSSQL), загрузки, авторизации
+│   │   ├── middleware/             # Проверка прав (JWT), логирование, ошибки
+│   │   ├── models/                 # Модели: Scan, Threat, ScanEvent, User, SandboxRun
+│   │   ├── routes/                 # Эндпоинты: auth, upload, scans, threats, admin, sandbox
+│   │   ├── services/               # Бизнес-логика: analyzer, emulator, detector, scanService
+│   │   └── socket/                 # Socket.IO события и обработчики комнат
+│   ├── sandbox_samples/            # Тестовые инертные образцы для песочницы
+│   ├── uploads/                    # Каталог для загружаемых файлов (.gitkeep)
+│   ├── public/                     # Серверный монитор (admin.html)
+│   ├── database.sql                # Базовая схема БД и справочник угроз
+│   ├── database_procedures.sql     # Хранимые процедуры и функции MSSQL
+│   ├── database_auth_sandbox.sql   # Миграция: Users, SandboxRuns, Scans.user_id
+│   ├── server.js                   # Точка входа Express + Socket.IO
+│   └── package.json
 │
-└── frontend/               # Статический сайт, без build-шага
-    ├── index.html          # Логин (публичная страница)
-    ├── register.html
-    ├── dashboard.html
-    ├── upload.html
-    ├── live.html
-    ├── history.html
-    ├── scan-details.html
-    ├── threats.html
-    ├── sandbox.html
-    ├── users.html          # только для role=admin
-    ├── css/                # tokens / base / layout / components
-    ├── js/                 # api.js, nav.js (auth-guard), charts.js, socket.js,
-    │                       # sandbox-worker.js (Web Worker), js/pages/*.js
-    └── assets/
+├── frontend/                       # Статический веб-интерфейс (без сборщиков)
+│   ├── assets/                     # Графические ресурсы и иконки
+│   ├── css/                        # Модули стилей: tokens, base, layout, components
+│   ├── js/                         # Клиентские скрипты: api, nav, socket, charts
+│   │   ├── pages/                  # Логика конкретных страниц (threats.js и др.)
+│   │   └── sandbox-worker.js       # Изолированный Web Worker песочницы
+│   ├── index.html                  # Экран авторизации (вход)
+│   ├── register.html               # Регистрация
+│   ├── dashboard.html              # Главная аналитическая панель
+│   ├── upload.html                 # Загрузка и анализ файлов
+│   ├── live.html                   # Мониторинг поведенческой эмуляции
+│   ├── history.html                # Журнал проверок и фильтрация
+│   ├── scan-details.html           # Детальный отчёт проверки с экспортом
+│   ├── threats.html                # Справочник угроз
+│   ├── sandbox.html                # Клиентская песочница правил
+│   └── users.html                  # Управление аккаунтами (Admin only)
+│
+├── docs/                           # Документация и иллюстрации
+│   └── images/                     # Векторные схемы и баннеры интерфейса
+├── scripts/                        # Скрипты генерации тестовых данных
+├── test_samples/                   # Набор готовых безопасных файлов для тестов
+├── package.json                    # Корневой конфигурационный файл
+└── README.md
 ```
 
+---
 
 ## 🚀 Быстрый старт
 
-### 1. Подготовка базы данных (MSSQL)
+### 1. Требования к окружению
+* **Node.js** версии `>= 18.0.0`
+* **Microsoft SQL Server** (2019 / 2022 / Express)
 
-Убедитесь, что у вас установлен и запущен Microsoft SQL Server.
+### 2. Подготовка базы данных
+Выполните по порядку три SQL-скрипта в MSSQL (например, через SSMS или `sqlcmd`):
 
-```bash
-# 1. Создайте базу данных и таблицы
-# Выполните по порядку: database.sql -> database_procedures.sql -> database_auth_sandbox.sql
-
-sqlcmd -S localhost -U sa -P "YourStrongPassword123" -i backend/database.sql
-sqlcmd -S localhost -U sa -P "YourStrongPassword123" -i backend/database_procedures.sql
-sqlcmd -S localhost -U sa -P "YourStrongPassword123" -i backend/database_auth_sandbox.sql
+```powershell
+# Применение схемы и процедур
+sqlcmd -S localhost -E -i backend/database.sql
+sqlcmd -S localhost -E -i backend/database_procedures.sql
+sqlcmd -S localhost -E -i backend/database_auth_sandbox.sql
 ```
 
-### 2. Настройка переменных окружения
+### 3. Настройка конфигурации (`backend/.env`)
+Скопируйте пример файла конфигурации:
 
-```bash
+```powershell
 cd backend
-cp .env.example .env
-# Отредактируйте .env под вашу среду:
-# - DB_SERVER, DB_PORT, DB_DATABASE, DB_USER, DB_PASSWORD
-# - FRONTEND_URL (по умолчанию http://localhost:3000 — фронтенд отдаётся тем же сервером)
-# - JWT_SECRET (обязательно смените на длинную случайную строку)
-# - BOOTSTRAP_ADMIN_KEY (см. шаг 5 — создание первого администратора)
+copy .env.example .env
 ```
 
-### 3. Установка зависимостей
-
-```bash
-cd backend
-npm install
-```
-Фронтенд — обычные статические файлы, ставить туда нечего: `npm run dev`/`npm start` в backend уже раздаёт папку `frontend/` напрямую.
-
-### 4. Запуск
-
-```bash
-npm run dev
-# Backend + статический фронтенд — оба на http://localhost:3000
-```
-
-### 5. Открыть в браузере и создать администратора
-
-Перейдите на **http://localhost:3000** — откроется страница входа.
-
-Первый администратор создаётся один раз через `bootstrap-admin` (пока задан `BOOTSTRAP_ADMIN_KEY` в `.env`):
-```bash
-curl -X POST http://localhost:3000/api/auth/bootstrap-admin \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"ChangeMe123!","key":"<значение BOOTSTRAP_ADMIN_KEY>"}'
-```
-После этого рекомендуется очистить `BOOTSTRAP_ADMIN_KEY` в `.env` — endpoint откажет, если админ уже есть.
-Обычные пользователи регистрируются через форму на `/register.html`.
-
-## 📋 Функциональность
-
-### Модуль 1. Загрузка файлов (`/upload`)
-- Drag & drop загрузка файлов
-- Поддержка: `.exe`, `.pdf`, `.js`, `.txt`, `.docx`, `.zip`, `.apk`, `.dll`
-- Ограничение: 10 МБ
-- Валидация MIME-типа и расширения
-- Прогресс-бар загрузки
-
-### Модуль 2. Статический анализ
-- Поиск подозрительных строк: `cmd.exe`, `powershell.exe`, `eval(`, `child_process`, `CreateRemoteThread`, `WriteProcessMemory`, `base64_decode` и др.
-- Извлечение URL (http/https) и IP-адресов из бинарных данных
-- PDF-специфичные признаки: `/JavaScript`, `/OpenAction`, `/AA`, `/Launch`
-- JS-специфичные: `eval`, `new Function`, `WebSocket`
-- Подсчёт энтропии (для бинарных файлов)
-- SHA256 хэш
-- Каждая сигнатура добавляет "очки риска" (risk score)
-
-### Модуль 3. Поведенческая эмуляция (`/live`)
-- Генератор событий в реальном времени через Socket.IO
-- Профили вредоносов:
-  - **Ransomware**: массовое создание файлов → переименование → README_DECRYPT.txt → высокая активность CPU/Disk
-  - **Keylogger**: ввод текста → захват клавиш → отправка на "C&C"
-  - **Backdoor**: исходящее соединение → приём команд → эксфильтрация
-  - **Worm**: сканирование сети → копирование себя → рассылка
-  - **Trojan**: маскировка → загрузка полезной нагрузки → C&C
-  - **Adware**: инъекция рекламы → редирект трафика → сбор данных
-- Задержки через `setTimeout`/`setInterval`
-
-### Модуль 4. Детектор
-- Суммарный risk score (статический + поведенческий)
-- Правила вердиктов:
-  - `>= 80` → **CRITICAL**
-  - `>= 50` → **HIGH**
-  - `>= 30` → **MEDIUM**
-  - `> 0` → **LOW**
-  - `0` → **CLEAN**
-- Алерты через Socket.IO при превышении порогов
-- Сохранение результата в MSSQL
-
-### Модуль 5. История сканирований (`/history`)
-- REST API: CRUD для сканирований
-- Таблица с фильтрами по вердикту и дате
-- Удаление записей
-- Пагинация
-
-### Модуль 6. Справочник угроз (`/threats`)
-- Карточки 6 типов угроз с описанием, признаками, score-весами
-- Данные из БД (можно расширить)
-
-### Модуль 7. Dashboard (`/`)
-- Виджеты: всего сканирований, по вердиктам
-- Графики: распределение вердиктов (Pie), активность по времени (Bar)
-- Быстрые действия
-
-## 🔌 API Endpoints
-
-### Upload
-- `POST /api/upload` — загрузка файла (multipart/form-data)
-- `GET /api/upload/config` — конфигурация загрузки
-
-### Scans
-- `GET /api/scans` — список с фильтрами (`verdict`, `search`, `dateFrom`, `dateTo`, `limit`, `offset`)
-- `GET /api/scans/stats` — статистика для дашборда
-- `GET /api/scans/:id` — детали сканирования
-- `DELETE /api/scans/:id` — удаление
-
-### Threats
-- `GET /api/threats` — список всех угроз
-- `GET /api/threats/:type` — угроза по типу
-
-### Socket.IO Events
-**Client → Server:**
-- `scan:join` — присоединиться к комнате сканирования
-- `scan:leave` — покинуть комнату
-- `alerts:subscribe` — подписка на глобальные алерты
-- `scan:events:request` — запрос истории событий
-- `dashboard:stats:request` — запрос статистики
-
-**Server → Client:**
-- `scan:progress` — прогресс статического анализа
-- `analysis:event` — событие поведенческой эмуляции
-- `analysis:complete` — завершение эмуляции
-- `scan:complete` — финальный результат сканирования
-- `scan:error` — ошибка сканирования
-- `detector:alert` — алерт детектора
-- `dashboard:stats:update` — периодическое обновление статистики
-
-## 🗄 База данных
-
-### Таблицы
-- **Scans** — история сканирований
-- **Threats** — справочник угроз (6 типов, предустановлены)
-- **ScanEvents** — события поведенческой эмуляции (в реальном времени)
-
-### Индексы
-- `Scans.created_at`, `Scans.verdict`, `Scans.file_hash`
-- `ScanEvents.scan_id`, `ScanEvents.timestamp`
-
-## 🔧 Конфигурация (.env)
-
+Отредактируйте параметры подключения к вашей БД в `backend/.env`:
 ```env
-# Server
 PORT=3000
 NODE_ENV=development
 
-# Database
 DB_SERVER=localhost
 DB_PORT=1433
 DB_DATABASE=MalwareSandbox
@@ -228,42 +187,51 @@ DB_USER=sa
 DB_PASSWORD=YourStrongPassword123
 DB_TRUST_SERVER_CERTIFICATE=true
 
-# Upload
-UPLOAD_DIR=./uploads
-MAX_FILE_SIZE=10485760
-ALLOWED_EXTENSIONS=.exe,.pdf,.js,.txt,.docx,.zip,.apk
-ALLOWED_MIME_TYPES=application/octet-stream,application/pdf,application/javascript,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/vnd.android.package-archive
-
-# Frontend
 FRONTEND_URL=http://localhost:3000
-
-# Socket.IO
-SOCKET_PING_TIMEOUT=60000
-SOCKET_PING_INTERVAL=25000
-
-# Analysis
-ENTROPY_THRESHOLD=7.0
-RISK_SCORE_CRITICAL=80
-RISK_SCORE_HIGH=50
-RISK_SCORE_MEDIUM=30
+JWT_SECRET=super-secret-random-jwt-key
+BOOTSTRAP_ADMIN_KEY=setup-first-admin-pass
 ```
 
-## 🧪 Тестирование
+### 4. Установка зависимостей и запуск
 
-```bash
-# Backend тесты
-cd backend
-npm test
+```powershell
+# Установка серверных библиотек
+npm run install:all
 
-# Frontend линтинг
-cd frontend
-npm run lint
+# Запуск проекта (из корня)
+npm run dev
 ```
 
-## 📝 Лицензия
+> Платформа запустится по адресу: **[http://localhost:3000](http://localhost:3000)**  
+> *(Сервер Express автоматически отдаёт и API, и статический фронтенд)*.
 
-Educational Project — Course Project "Malware Behavior Simulation and Detection Platform"
+### 5. Создание администратора
+Создать первого администратора можно один раз через специальный bootstrap-запрос:
 
-## 👨‍💻 Автор
+```powershell
+curl -X POST http://localhost:3000/api/auth/bootstrap-admin `
+  -H "Content-Type: application/json" `
+  -d '{\"email\":\"admin@example.com\",\"password\":\"AdminPass123!\",\"key\":\"setup-first-admin-pass\"}'
+```
 
-Senior Fullstack Developer / Software Architect
+Обычные пользователи могут регистрироваться самостоятельно через форму на `/register.html`.
+
+---
+
+## 🧪 Тестирование детекции
+
+В папке `test_samples/` подготовлены безопасные демонстрационные образцы:
+
+* `01_clean/` — чистые текстовые файлы, скрипты и отчеты (**CLEAN**).
+* `02_low_risk/` — файлы с легкими сетевыми утилитами (**LOW**).
+* `03_medium_risk/` — симуляторы веб-скрейперов и макросов (**MEDIUM**).
+* `04_high_risk/` — трояны-дропперы и сетевые черви (**HIGH**).
+* `05_critical/` — симуляторы программ-вымогателей и эксплойтов (**CRITICAL**).
+
+Загрузите любой из них через страницу **[Загрузка файла](http://localhost:3000/upload.html)** для проверки работы анализатора и детектора.
+
+---
+
+## 📄 Лицензия
+
+Учебный проект — Курсовой проект по дисциплине «Защита информации и надежность информационных систем» (ЗиНИС).

@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 380" width="100%" height="380">
+  <defs>
+    <linearGradient id="layerGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#070d18"/>
+      <stop offset="100%" stop-color="#0a1526"/>
+    </linearGradient>
+    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e1b2f"/>
+      <stop offset="100%" stop-color="#070c16"/>
+    </linearGradient>
+    <filter id="glowSubtle" x="-10%" y="-10%" width="120%" height="120%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="380" rx="8" fill="#04060a" stroke="#16324a" stroke-width="1.5"/>
+
+  <!-- Column 1: Client Layer -->
+  <g transform="translate(30, 30)">
+    <rect width="250" height="320" rx="6" fill="url(#layerGrad1)" stroke="#1f5c7d" stroke-width="1.2"/>
+    <text x="20" y="32" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="1.5" text-transform="uppercase">01 // CLIENT INTERFACE</text>
+    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Web Shell (HUD UI)</text>
+    
+    <g transform="translate(15, 75)">
+      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#38bdf8">Dashboard &amp; History</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">SVG-графики, фильтры, экспорт</text>
+    </g>
+
+    <g transform="translate(15, 127)">
+      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#22c55e">Live Terminal</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Socket.IO стриминг событий</text>
+    </g>
+
+    <g transform="translate(15, 179)">
+      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">Sandbox (Web Worker)</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Изолированный запуск правил</text>
+    </g>
+
+    <g transform="translate(15, 231)">
+      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#a855f7">Threat Catalog</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">0ms Stale-While-Revalidate</text>
+    </g>
+  </g>
+
+  <!-- Connection arrows 1 -> 2 -->
+  <g stroke="#22d3ee" stroke-width="1.5" opacity="0.8">
+    <path d="M 280 148 L 320 148" stroke-dasharray="4 2"/>
+    <polygon points="323,148 316,144 316,152" fill="#22d3ee"/>
+    <path d="M 320 220 L 280 220" stroke-dasharray="4 2"/>
+    <polygon points="277,220 284,216 284,224" fill="#22d3ee"/>
+  </g>
+
+  <!-- Column 2: Backend Core -->
+  <g transform="translate(325, 30)">
+    <rect width="260" height="320" rx="6" fill="url(#layerGrad1)" stroke="#1f5c7d" stroke-width="1.2"/>
+    <text x="20" y="32" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="1.5" text-transform="uppercase">02 // SERVER ENGINE</text>
+    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Node.js + Express</text>
+
+    <g transform="translate(15, 75)">
+      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#38bdf8">Static Analyzer</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Сигнатуры, энтропия, SHA-256</text>
+    </g>
+
+    <g transform="translate(15, 127)">
+      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#22c55e">Behavioral Emulator</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Ransomware, Worm, Trojan, Backdoor</text>
+    </g>
+
+    <g transform="translate(15, 179)">
+      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#ef4444">Risk Score Detector</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">CRITICAL / HIGH / MED / LOW / CLEAN</text>
+    </g>
+
+    <g transform="translate(15, 231)">
+      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">Auth &amp; RBAC (JWT Cookie)</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Роли admin / user, bcrypt</text>
+    </g>
+  </g>
+
+  <!-- Connection arrows 2 -> 3 -->
+  <g stroke="#22d3ee" stroke-width="1.5" opacity="0.8">
+    <path d="M 585 148 L 625 148" stroke-dasharray="4 2"/>
+    <polygon points="628,148 621,144 621,152" fill="#22d3ee"/>
+    <path d="M 625 220 L 585 220" stroke-dasharray="4 2"/>
+    <polygon points="582,220 589,216 589,224" fill="#22d3ee"/>
+  </g>
+
+  <!-- Column 3: Storage Layer -->
+  <g transform="translate(630, 30)">
+    <rect width="240" height="320" rx="6" fill="url(#layerGrad1)" stroke="#1f5c7d" stroke-width="1.2"/>
+    <text x="20" y="32" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="1.5" text-transform="uppercase">03 // PERSISTENCE</text>
+    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff">MSSQL Database</text>
+
+    <g transform="translate(15, 75)">
+      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.Scans</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Результаты, хэши, вердикты</text>
+    </g>
+
+    <g transform="translate(15, 127)">
+      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.ScanEvents</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Потоковые поведенческие логи</text>
+    </g>
+
+    <g transform="translate(15, 179)">
+      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.SandboxRuns</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">История выполнения правил</text>
+    </g>
+
+    <g transform="translate(15, 231)">
+      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
+      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.Users &amp; Threats</text>
+      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Аккаунты и справочник угроз</text>
+    </g>
+  </g>
+</svg>
