@@ -44,94 +44,14 @@
   <img src="docs/images/architecture.svg" alt="System Architecture Diagram" width="100%">
 </p>
 
-Платформа построена по трёхуровневой клиент-серверной архитектуре:
+### 🏛️ Спецификация уровней системы
 
-```mermaid
-flowchart TD
-    classDef clientLayer fill:#071322,stroke:#0284c7,stroke-width:1.5px,color:#e0f2fe;
-    classDef gatewayLayer fill:#08182b,stroke:#0d9488,stroke-width:1.5px,color:#ccfbf1;
-    classDef engineLayer fill:#16192e,stroke:#6366f1,stroke-width:1.5px,color:#e0e7ff;
-    classDef dbLayer fill:#1c1322,stroke:#d97706,stroke-width:1.5px,color:#fef3c7;
-    classDef workerLayer fill:#1a1025,stroke:#a855f7,stroke-width:1.5px,color:#f3e8ff;
-    classDef alertRed fill:#3b0712,stroke:#ef4444,stroke-width:2px,color:#fecaca;
-    classDef alertGreen fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#dcfce7;
-
-    subgraph CLIENT ["🖥️ КЛИЕНТСКИЙ УРОВЕНЬ (Cyber HUD • Vanilla JS)"]
-        direction LR
-        UI_DASH["📊 Дашборд и История<br/>(KPI, SVG-графики, фильтры)"]:::clientLayer
-        UI_UPLOAD["📤 Загрузка файлов<br/>(Drag-and-Drop, прогресс)"]:::clientLayer
-        UI_LIVE["⚡ Live-мониторинг<br/>(Терминал потока событий)"]:::clientLayer
-        UI_THREATS["📚 Справочник угроз<br/>(0ms Stale-While-Revalidate)"]:::clientLayer
-        
-        subgraph SANDBOX_ENV ["🔒 Изолированная среда песочницы"]
-            WORKER["⚙️ Web Worker Sandbox<br/>(Safe Sandbox, без DOM/Net API, 3s Timeout)"]:::workerLayer
-            EDITOR["📝 JS Code Editor<br/>(Пользовательские правила)"]:::workerLayer
-            EDITOR -->|"Потокобезопасный запуск"| WORKER
-        end
-    end
-
-    subgraph GATEWAY ["🌐 СЕТЕВОЙ ШЛЮЗ И АВТОРИЗАЦИЯ (Express API)"]
-        direction LR
-        AUTH_MW["🛡️ JWT Auth Guard<br/>(HttpOnly Cookie, RBAC: admin/user)"]:::gatewayLayer
-        STATIC_SRV["📁 Static Host<br/>(HTML, CSS, JS, Assets)"]:::gatewayLayer
-        UPLOAD_EP["📥 Multer Upload Handler<br/>(MIME-валидация, лимит 10MB)"]:::gatewayLayer
-        SOCKET_SRV["🔌 Socket.IO Server<br/>(Комнаты сканирования, телеметрия)"]:::gatewayLayer
-    end
-
-    subgraph BACKEND ["⚙️ СЕРВЕРНЫЙ КОМПЛЕКС АНАЛИЗА (ScanService)"]
-        direction TB
-        SCAN_SVC["🎯 ScanService Orchestrator<br/>(Координация пайплайна проверки)"]:::engineLayer
-
-        subgraph PIPELINE ["🔬 Двухэтапный конвейер детекции"]
-            direction LR
-            ANALYZER["1️⃣ Статический анализатор<br/>• Энтропия Шеннона<br/>• SHA-256 хэширование<br/>• Поиск опасных сигнатур и URL"]:::engineLayer
-            EMULATOR["2️⃣ Поведенческий эмулятор<br/>• Ransomware, Worm, Trojan<br/>• Keylogger, Backdoor, Adware<br/>• Симуляция шагов атаки"]:::engineLayer
-        end
-
-        DETECTOR["⚖️ Risk Score Engine<br/>(Взвешенная сумма эвристик: 0 - 100)"]:::engineLayer
-        
-        subgraph VERDICTS ["🎯 Вердикт безопасности"]
-            direction LR
-            V_CLEAN["CLEAN / LOW<br/>(0 - 29 баллов)"]:::alertGreen
-            V_MED["MEDIUM / HIGH<br/>(30 - 79 баллов)"]:::engineLayer
-            V_CRIT["CRITICAL<br/>(80 - 100 баллов)"]:::alertRed
-        end
-    end
-
-    subgraph DATABASE ["🗄️ СЛОЙ ХРАНЕНИЯ ДАННЫХ (Microsoft SQL Server)"]
-        direction TB
-        DB_SCANS[("📋 dbo.Scans<br/>Результаты, хэши, вердикты, user_id")]:::dbLayer
-        DB_EVENTS[("📜 dbo.ScanEvents<br/>Потоковые телеметрические логи")]:::dbLayer
-        DB_THREATS[("📚 dbo.Threats<br/>Матрица угроз и весовые шкалы")]:::dbLayer
-        DB_USERS[("👤 dbo.Users<br/>Учётные записи, роли, блокировки")]:::dbLayer
-        DB_RUNS[("🧪 dbo.SandboxRuns<br/>История запусков правил песочницы")]:::dbLayer
-    end
-
-    %% Потоки данных: Клиент -> Шлюз
-    UI_UPLOAD -->|"POST /api/upload"| UPLOAD_EP
-    UI_DASH <-->|"REST API + JWT"| AUTH_MW
-    UI_THREATS <-->|"GET /api/threats"| AUTH_MW
-    UI_LIVE <-->|"WebSockets (scan:join, scan:events)"| SOCKET_SRV
-    WORKER -->|"POST /api/sandbox/runs"| AUTH_MW
-
-    %% Потоки данных: Шлюз -> Анализ
-    UPLOAD_EP -->|"Файл на анализ"| SCAN_SVC
-    AUTH_MW --> SCAN_SVC
-    SCAN_SVC --> ANALYZER
-    ANALYZER -->|"Сигнатурные веса"| DETECTOR
-    SCAN_SVC -->|"Запуск профиля эмуляции"| EMULATOR
-    EMULATOR -->|"analysis:event"| SOCKET_SRV
-    EMULATOR -->|"Поведенческие веса"| DETECTOR
-    DETECTOR --> VERDICTS
-    DETECTOR -->|"scan:complete, detector:alert"| SOCKET_SRV
-
-    %% Потоки данных: Сервис -> БД
-    SCAN_SVC -->|"sp_CreateScan, sp_SaveScanEvents"| DB_SCANS
-    SCAN_SVC -->|"Bulk Insert событий"| DB_EVENTS
-    AUTH_MW <-->|"CRUD пользователей"| DB_USERS
-    AUTH_MW <-->|"sp_GetAllThreats (кэш)"| DB_THREATS
-    AUTH_MW <-->|"Сохранение прогонов песочницы"| DB_RUNS
-```
+| Уровень архитектуры | Технологический стек | Ключевые компоненты и решаемые задачи |
+| :--- | :--- | :--- |
+| **1. Клиентский интерфейс (HUD)** | `HTML5`, `Vanilla JS`, `Web Workers`, `CSS Variables` | • **Cyber HUD**: аналитический дашборд, динамические графики активности, фильтры.<br/>• **File Uploader**: Drag-and-Drop загрузка, клиентская MIME-валидация до 10 МБ.<br/>• **Live Terminal**: real-time мониторинг телеметрии через Socket.IO.<br/>• **Web Worker Sandbox**: изоляция пользовательских JS-правил (без DOM/fetch/eval, таймаут 3000 мс).<br/>• **Threats Catalog**: мгновенная загрузка справочника с кэшем `sessionStorage` (0 мс). |
+| **2. Сетевой шлюз &amp; API** | `Node.js`, `Express 4`, `Socket.IO`, `Multer`, `JWT` | • **JWT Guard &amp; RBAC**: безопасные `HttpOnly` Cookies, разделение прав `admin` / `user`.<br/>• **Multer Stream Handler**: приём файлов, проверка сигнатур заголовков, защита от переполнения.<br/>• **Socket.IO Engine**: изолированные комнаты анализа, Full-Duplex трансляция событий.<br/>• **Static Asset Server**: прямая высокоскоростная раздача статических ресурсов. |
+| **3. Ядро детекции (ScanService)** | `Node.js Crypto`, `Heuristics Engine`, `Custom Emulators` | • **Статический анализ**: вычисление SHA-256, энтропия Шеннона, поиск вредоносных IP/URL.<br/>• **Поведенческая эмуляция**: 6 профилей атак (*Ransomware, Worm, Trojan, Keylogger, Backdoor, Adware*).<br/>• **Risk Score Engine**: расчёт риска (0–100 баллов) с классификацией (*CRITICAL, HIGH, MEDIUM, LOW, CLEAN*). |
+| **4. Слой хранения (СУБД)** | `Microsoft SQL Server 2019/2022`, `T-SQL` | • **dbo.Scans**: результаты сканирований, вычисленные хэши, итоговые вердикты, `user_id` (FK).<br/>• **dbo.ScanEvents**: хронологический журнал шагов поведенческой эмуляции.<br/>• **dbo.Threats**: весовая матрица 6 классов угроз и правила сопоставления.<br/>• **dbo.Users**: безопасность учётных записей аналитиков (bcrypt хэши, роли, блокировки).<br/>• **dbo.SandboxRuns**: аудит и история запуска JS-правил в песочнице. |
 
 ---
 

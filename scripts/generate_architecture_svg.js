@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" width="100%" height="auto">
+const fs = require('fs');
+const path = require('path');
+
+const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1180 560" width="100%" height="auto">
   <defs>
     <!-- Background Gradients -->
     <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -394,4 +397,8 @@
       <text x="12" y="74" class="pipe-tag" fill="#d97706">INSERT INTO SandboxRuns (user_id FK)</text>
     </g>
   </g>
-</svg>
+</svg>`;
+
+const outputPath = path.join(__dirname, '..', 'docs', 'images', 'architecture.svg');
+fs.writeFileSync(outputPath, svgContent, 'utf8');
+console.log('✅ Generated architecture.svg successfully at:', outputPath);
