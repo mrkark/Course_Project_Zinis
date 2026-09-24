@@ -8,7 +8,6 @@
   <a href="#-технологический-стек"><img src="https://img.shields.io/badge/MSSQL-2019%2B-f59e0b?style=for-the-badge&logo=microsoftsqlserver&logoColor=white" alt="MSSQL"></a>
   <a href="#-технологический-стек"><img src="https://img.shields.io/badge/Socket.IO-4.7-a855f7?style=for-the-badge&logo=socketdotio&logoColor=white" alt="Socket.IO"></a>
   <a href="#-технологический-стек"><img src="https://img.shields.io/badge/UI-Cyber_HUD-38bdf8?style=for-the-badge" alt="Cyber HUD"></a>
-  <a href="#-лицензия"><img src="https://img.shields.io/badge/License-Educational-gray?style=for-the-badge" alt="License"></a>
 </p>
 
 ---
@@ -167,32 +166,7 @@ sqlcmd -S localhost -E -i backend/database_procedures.sql
 sqlcmd -S localhost -E -i backend/database_auth_sandbox.sql
 ```
 
-### 3. Настройка конфигурации (`backend/.env`)
-Скопируйте пример файла конфигурации:
-
-```powershell
-cd backend
-copy .env.example .env
-```
-
-Отредактируйте параметры подключения к вашей БД в `backend/.env`:
-```env
-PORT=3000
-NODE_ENV=development
-
-DB_SERVER=localhost
-DB_PORT=1433
-DB_DATABASE=MalwareSandbox
-DB_USER=sa
-DB_PASSWORD=YourStrongPassword123
-DB_TRUST_SERVER_CERTIFICATE=true
-
-FRONTEND_URL=http://localhost:3000
-JWT_SECRET=super-secret-random-jwt-key
-BOOTSTRAP_ADMIN_KEY=setup-first-admin-pass
-```
-
-### 4. Установка зависимостей и запуск
+### 3. Установка зависимостей и запуск
 
 ```powershell
 # Установка серверных библиотек
@@ -205,7 +179,7 @@ npm run dev
 > Платформа запустится по адресу: **[http://localhost:3000](http://localhost:3000)**  
 > *(Сервер Express автоматически отдаёт и API, и статический фронтенд)*.
 
-### 5. Создание администратора
+### 4. Создание администратора
 Создать первого администратора можно один раз через специальный bootstrap-запрос:
 
 ```powershell
@@ -228,10 +202,4 @@ curl -X POST http://localhost:3000/api/auth/bootstrap-admin `
 * `04_high_risk/` — трояны-дропперы и сетевые черви (**HIGH**).
 * `05_critical/` — симуляторы программ-вымогателей и эксплойтов (**CRITICAL**).
 
-Загрузите любой из них через страницу **[Загрузка файла](http://localhost:3000/upload.html)** для проверки работы анализатора и детектора.
-
----
-
-## 📄 Лицензия
-
-Учебный проект — Курсовой проект по дисциплине «Защита информации и надежность информационных систем» (ЗиНИС).
+Загрузите любой из них через страницу **[Загрузка файла](http://localhost:3000/upload.html)** для проверки работы анализатора и детектора.
