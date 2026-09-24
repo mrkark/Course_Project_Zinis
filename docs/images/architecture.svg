@@ -1,15 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 380" width="100%" height="380">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 420" width="100%" height="420">
   <defs>
-    <linearGradient id="layerGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#070d18"/>
-      <stop offset="100%" stop-color="#0a1526"/>
+    <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#030509"/>
+      <stop offset="100%" stop-color="#060b14"/>
     </linearGradient>
-    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="layerClient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a1526"/>
+      <stop offset="100%" stop-color="#060c18"/>
+    </linearGradient>
+    <linearGradient id="layerServer" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#081b24"/>
+      <stop offset="100%" stop-color="#051017"/>
+    </linearGradient>
+    <linearGradient id="layerDB" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#181308"/>
+      <stop offset="100%" stop-color="#0e0a04"/>
+    </linearGradient>
+    <linearGradient id="boxInner" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0e1b2f"/>
-      <stop offset="100%" stop-color="#070c16"/>
+      <stop offset="100%" stop-color="#060c16"/>
     </linearGradient>
-    <filter id="glowSubtle" x="-10%" y="-10%" width="120%" height="120%">
-      <feGaussianBlur stdDeviation="2" result="blur"/>
+    <filter id="glowF" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
       <feMerge>
         <feMergeNode in="blur"/>
         <feMergeNode in="SourceGraphic"/>
@@ -17,115 +29,157 @@
     </filter>
   </defs>
 
-  <!-- Background -->
-  <rect width="900" height="380" rx="8" fill="#04060a" stroke="#16324a" stroke-width="1.5"/>
+  <!-- Outer Canvas -->
+  <rect width="920" height="420" rx="8" fill="url(#bgG)" stroke="#16324a" stroke-width="1.5"/>
 
-  <!-- Column 1: Client Layer -->
-  <g transform="translate(30, 30)">
-    <rect width="250" height="320" rx="6" fill="url(#layerGrad1)" stroke="#1f5c7d" stroke-width="1.2"/>
-    <text x="20" y="32" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="1.5" text-transform="uppercase">01 // CLIENT INTERFACE</text>
-    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Web Shell (HUD UI)</text>
-    
-    <g transform="translate(15, 75)">
-      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#38bdf8">Dashboard &amp; History</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">SVG-графики, фильтры, экспорт</text>
+  <!-- Top Title Banner inside SVG -->
+  <g transform="translate(30, 20)">
+    <text x="0" y="16" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="2">// SYSTEM ARCHITECTURE &amp; DATAFLOW PIPELINE</text>
+    <text x="0" y="38" font-family="-apple-system, sans-serif" font-size="18" font-weight="900" fill="#ffffff">Трёхуровневая архитектура платформы анализа ВПО</text>
+  </g>
+
+  <!-- Level 1: Client (Browser) -->
+  <g transform="translate(30, 75)">
+    <rect width="265" height="320" rx="6" fill="url(#layerClient)" stroke="#0284c7" stroke-width="1.5"/>
+    <rect x="0" y="0" width="265" height="32" rx="6" fill="#0369a1" opacity="0.25"/>
+    <text x="14" y="21" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" fill="#38bdf8" letter-spacing="1">🖥️ КЛИЕНТ • WEB BROWSER</text>
+
+    <!-- Item 1: HUD UI -->
+    <g transform="translate(12, 44)">
+      <rect width="241" height="48" rx="4" fill="url(#boxInner)" stroke="#1e3a5f" stroke-width="1"/>
+      <text x="12" y="20" font-family="monospace" font-size="12" font-weight="bold" fill="#38bdf8">Cyber HUD UI (Vanilla)</text>
+      <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10.5" fill="#94a3b8">Дашборд, SVG-графики, история</text>
     </g>
 
-    <g transform="translate(15, 127)">
-      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#22c55e">Live Terminal</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Socket.IO стриминг событий</text>
+    <!-- Item 2: Live Monitor -->
+    <g transform="translate(12, 100)">
+      <rect width="241" height="48" rx="4" fill="url(#boxInner)" stroke="#1e3a5f" stroke-width="1"/>
+      <text x="12" y="20" font-family="monospace" font-size="12" font-weight="bold" fill="#22c55e">Live Terminal Stream</text>
+      <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10.5" fill="#94a3b8">Socket.IO real-time эмуляция</text>
     </g>
 
-    <g transform="translate(15, 179)">
-      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">Sandbox (Web Worker)</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Изолированный запуск правил</text>
+    <!-- Item 3: Threat Catalog -->
+    <g transform="translate(12, 156)">
+      <rect width="241" height="48" rx="4" fill="url(#boxInner)" stroke="#1e3a5f" stroke-width="1"/>
+      <text x="12" y="20" font-family="monospace" font-size="12" font-weight="bold" fill="#f59e0b">Threat Library</text>
+      <text x="12" y="36" font-family="-apple-system, sans-serif" font-size="10.5" fill="#94a3b8">Кэш sessionStorage (0мс отклик)</text>
     </g>
 
-    <g transform="translate(15, 231)">
-      <rect width="220" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#a855f7">Threat Catalog</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">0ms Stale-While-Revalidate</text>
+    <!-- Item 4: Web Worker Sandbox -->
+    <g transform="translate(12, 212)">
+      <rect width="241" height="96" rx="4" fill="#0d0b1a" stroke="#7e22ce" stroke-width="1.2"/>
+      <text x="12" y="22" font-family="monospace" font-size="11.5" font-weight="bold" fill="#c084fc">🔒 Web Worker Sandbox</text>
+      <text x="12" y="38" font-family="-apple-system, sans-serif" font-size="10" fill="#cbd5e1">• Изолированный поток Worker</text>
+      <text x="12" y="52" font-family="-apple-system, sans-serif" font-size="10" fill="#cbd5e1">• Без доступа к DOM, Network, FS</text>
+      <text x="12" y="66" font-family="-apple-system, sans-serif" font-size="10" fill="#cbd5e1">• Защитный таймаут 3000 мс</text>
+      <text x="12" y="82" font-family="monospace" font-size="9.5" fill="#a855f7">POST /api/sandbox/runs → сохранение</text>
     </g>
   </g>
 
-  <!-- Connection arrows 1 -> 2 -->
-  <g stroke="#22d3ee" stroke-width="1.5" opacity="0.8">
-    <path d="M 280 148 L 320 148" stroke-dasharray="4 2"/>
-    <polygon points="323,148 316,144 316,152" fill="#22d3ee"/>
-    <path d="M 320 220 L 280 220" stroke-dasharray="4 2"/>
-    <polygon points="277,220 284,216 284,224" fill="#22d3ee"/>
+  <!-- Connectors Client -> Server -->
+  <g stroke="#22d3ee" stroke-width="1.5" opacity="0.85">
+    <path d="M 295 142 L 325 142" stroke-dasharray="3 3"/>
+    <polygon points="328,142 321,138 321,146" fill="#22d3ee"/>
+    <path d="M 325 210 L 295 210" stroke-dasharray="3 3"/>
+    <polygon points="292,210 299,206 299,214" fill="#22d3ee"/>
   </g>
 
-  <!-- Column 2: Backend Core -->
-  <g transform="translate(325, 30)">
-    <rect width="260" height="320" rx="6" fill="url(#layerGrad1)" stroke="#1f5c7d" stroke-width="1.2"/>
-    <text x="20" y="32" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="1.5" text-transform="uppercase">02 // SERVER ENGINE</text>
-    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff">Node.js + Express</text>
+  <!-- Level 2: Backend Core (Express + ScanService) -->
+  <g transform="translate(330, 75)">
+    <rect width="295" height="320" rx="6" fill="url(#layerServer)" stroke="#0d9488" stroke-width="1.5"/>
+    <rect x="0" y="0" width="295" height="32" rx="6" fill="#0f766e" opacity="0.25"/>
+    <text x="14" y="21" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" fill="#2dd4bf" letter-spacing="1">⚙️ СЕРВЕР • NODE.JS + EXPRESS</text>
 
-    <g transform="translate(15, 75)">
-      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#38bdf8">Static Analyzer</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Сигнатуры, энтропия, SHA-256</text>
+    <!-- Gateway Row -->
+    <g transform="translate(12, 44)">
+      <rect width="271" height="42" rx="4" fill="#041217" stroke="#115e59" stroke-width="1"/>
+      <text x="10" y="18" font-family="monospace" font-size="11" font-weight="bold" fill="#5eead4">API Gateway &amp; Auth Guard</text>
+      <text x="10" y="32" font-family="-apple-system, sans-serif" font-size="9.5" fill="#99f6e4">JWT HttpOnly, RBAC (admin/user), Multer 10MB</text>
     </g>
 
-    <g transform="translate(15, 127)">
-      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#22c55e">Behavioral Emulator</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Ransomware, Worm, Trojan, Backdoor</text>
+    <!-- ScanService Box -->
+    <g transform="translate(12, 94)">
+      <rect width="271" height="150" rx="4" fill="#041217" stroke="#115e59" stroke-width="1"/>
+      <text x="10" y="18" font-family="monospace" font-size="11.5" font-weight="bold" fill="#2dd4bf">🎯 ScanService &amp; Конвейер детекции</text>
+
+      <!-- Stage 1 -->
+      <g transform="translate(8, 26)">
+        <rect width="255" height="34" rx="3" fill="#072228" stroke="#134e4a" stroke-width="0.8"/>
+        <text x="8" y="15" font-family="monospace" font-size="10" font-weight="bold" fill="#38bdf8">1️⃣ Статический анализ</text>
+        <text x="8" y="27" font-family="-apple-system, sans-serif" font-size="9" fill="#94a3b8">SHA-256, энтропия Шеннона, опасные API</text>
+      </g>
+
+      <!-- Stage 2 -->
+      <g transform="translate(8, 66)">
+        <rect width="255" height="34" rx="3" fill="#072228" stroke="#134e4a" stroke-width="0.8"/>
+        <text x="8" y="15" font-family="monospace" font-size="10" font-weight="bold" fill="#f59e0b">2️⃣ Поведенческая эмуляция</text>
+        <text x="8" y="27" font-family="-apple-system, sans-serif" font-size="9" fill="#94a3b8">Ransomware, Worm, Trojan, Keylogger, C2</text>
+      </g>
+
+      <!-- Stage 3 -->
+      <g transform="translate(8, 106)">
+        <rect width="255" height="34" rx="3" fill="#072228" stroke="#134e4a" stroke-width="0.8"/>
+        <text x="8" y="15" font-family="monospace" font-size="10" font-weight="bold" fill="#ef4444">3️⃣ Risk Score Engine (0-100)</text>
+        <text x="8" y="27" font-family="-apple-system, sans-serif" font-size="9" fill="#94a3b8">CRITICAL (80+) • HIGH (50+) • CLEAN (0)</text>
+      </g>
     </g>
 
-    <g transform="translate(15, 179)">
-      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#ef4444">Risk Score Detector</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">CRITICAL / HIGH / MED / LOW / CLEAN</text>
-    </g>
-
-    <g transform="translate(15, 231)">
-      <rect width="230" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">Auth &amp; RBAC (JWT Cookie)</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Роли admin / user, bcrypt</text>
+    <!-- Socket.IO Emitter -->
+    <g transform="translate(12, 252)">
+      <rect width="271" height="56" rx="4" fill="#041217" stroke="#115e59" stroke-width="1"/>
+      <text x="10" y="19" font-family="monospace" font-size="11" font-weight="bold" fill="#a855f7">🔌 Socket.IO Server Engine</text>
+      <text x="10" y="34" font-family="-apple-system, sans-serif" font-size="9.5" fill="#cbd5e1">• Трансляция analysis:event в комнату скана</text>
+      <text x="10" y="47" font-family="-apple-system, sans-serif" font-size="9.5" fill="#cbd5e1">• detector:alert при превышении порогов риска</text>
     </g>
   </g>
 
-  <!-- Connection arrows 2 -> 3 -->
-  <g stroke="#22d3ee" stroke-width="1.5" opacity="0.8">
-    <path d="M 585 148 L 625 148" stroke-dasharray="4 2"/>
-    <polygon points="628,148 621,144 621,152" fill="#22d3ee"/>
-    <path d="M 625 220 L 585 220" stroke-dasharray="4 2"/>
-    <polygon points="582,220 589,216 589,224" fill="#22d3ee"/>
+  <!-- Connectors Server -> DB -->
+  <g stroke="#f59e0b" stroke-width="1.5" opacity="0.85">
+    <path d="M 625 158 L 655 158" stroke-dasharray="3 3"/>
+    <polygon points="658,158 651,154 651,162" fill="#f59e0b"/>
+    <path d="M 655 226 L 625 226" stroke-dasharray="3 3"/>
+    <polygon points="622,226 629,222 629,230" fill="#f59e0b"/>
   </g>
 
-  <!-- Column 3: Storage Layer -->
-  <g transform="translate(630, 30)">
-    <rect width="240" height="320" rx="6" fill="url(#layerGrad1)" stroke="#1f5c7d" stroke-width="1.2"/>
-    <text x="20" y="32" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#22d3ee" letter-spacing="1.5" text-transform="uppercase">03 // PERSISTENCE</text>
-    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="16" font-weight="800" fill="#ffffff">MSSQL Database</text>
+  <!-- Level 3: Database (MSSQL) -->
+  <g transform="translate(660, 75)">
+    <rect width="230" height="320" rx="6" fill="url(#layerDB)" stroke="#d97706" stroke-width="1.5"/>
+    <rect x="0" y="0" width="230" height="32" rx="6" fill="#b45309" opacity="0.25"/>
+    <text x="14" y="21" font-family="-apple-system, sans-serif" font-size="11" font-weight="800" fill="#fcd34d" letter-spacing="1">🗄️ БАЗА ДАННЫХ • MSSQL</text>
 
-    <g transform="translate(15, 75)">
-      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.Scans</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Результаты, хэши, вердикты</text>
+    <!-- Table 1 -->
+    <g transform="translate(10, 44)">
+      <rect width="210" height="46" rx="4" fill="#130d04" stroke="#78350f" stroke-width="1"/>
+      <text x="10" y="19" font-family="monospace" font-size="11.5" font-weight="bold" fill="#fde047">dbo.Scans</text>
+      <text x="10" y="34" font-family="-apple-system, sans-serif" font-size="9.5" fill="#fef08a">Хэши, вердикты, user_id (FK)</text>
     </g>
 
-    <g transform="translate(15, 127)">
-      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.ScanEvents</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Потоковые поведенческие логи</text>
+    <!-- Table 2 -->
+    <g transform="translate(10, 98)">
+      <rect width="210" height="46" rx="4" fill="#130d04" stroke="#78350f" stroke-width="1"/>
+      <text x="10" y="19" font-family="monospace" font-size="11.5" font-weight="bold" fill="#fde047">dbo.ScanEvents</text>
+      <text x="10" y="34" font-family="-apple-system, sans-serif" font-size="9.5" fill="#fef08a">Потоковые поведенческие логи</text>
     </g>
 
-    <g transform="translate(15, 179)">
-      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.SandboxRuns</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">История выполнения правил</text>
+    <!-- Table 3 -->
+    <g transform="translate(10, 152)">
+      <rect width="210" height="46" rx="4" fill="#130d04" stroke="#78350f" stroke-width="1"/>
+      <text x="10" y="19" font-family="monospace" font-size="11.5" font-weight="bold" fill="#fde047">dbo.Threats</text>
+      <text x="10" y="34" font-family="-apple-system, sans-serif" font-size="9.5" fill="#fef08a">Справочник 6 типов угроз и весов</text>
     </g>
 
-    <g transform="translate(15, 231)">
-      <rect width="210" height="42" rx="4" fill="url(#boxGrad)" stroke="#16324a" stroke-width="1"/>
-      <text x="14" y="22" font-family="monospace" font-size="12" font-weight="700" fill="#f59e0b">dbo.Users &amp; Threats</text>
-      <text x="14" y="34" font-family="-apple-system, sans-serif" font-size="10" fill="#94a3b8">Аккаунты и справочник угроз</text>
+    <!-- Table 4 -->
+    <g transform="translate(10, 206)">
+      <rect width="210" height="46" rx="4" fill="#130d04" stroke="#78350f" stroke-width="1"/>
+      <text x="10" y="19" font-family="monospace" font-size="11.5" font-weight="bold" fill="#fde047">dbo.SandboxRuns</text>
+      <text x="10" y="34" font-family="-apple-system, sans-serif" font-size="9.5" fill="#fef08a">История выполнения JS-правил</text>
+    </g>
+
+    <!-- Table 5 -->
+    <g transform="translate(10, 260)">
+      <rect width="210" height="48" rx="4" fill="#130d04" stroke="#78350f" stroke-width="1"/>
+      <text x="10" y="19" font-family="monospace" font-size="11.5" font-weight="bold" fill="#fde047">dbo.Users</text>
+      <text x="10" y="34" font-family="-apple-system, sans-serif" font-size="9.5" fill="#fef08a">Аккаунты, роли admin/user, хэши</text>
     </g>
   </g>
 </svg>

@@ -47,39 +47,90 @@
 Платформа построена по трёхуровневой клиент-серверной архитектуре:
 
 ```mermaid
-flowchart LR
-    subgraph Client["Клиент (Браузер)"]
-        UI["HUD Интерфейс"]
-        Worker["Web Worker Sandbox"]
-        SocketC["Socket.IO Client"]
+flowchart TD
+    classDef clientLayer fill:#071322,stroke:#0284c7,stroke-width:1.5px,color:#e0f2fe;
+    classDef gatewayLayer fill:#08182b,stroke:#0d9488,stroke-width:1.5px,color:#ccfbf1;
+    classDef engineLayer fill:#16192e,stroke:#6366f1,stroke-width:1.5px,color:#e0e7ff;
+    classDef dbLayer fill:#1c1322,stroke:#d97706,stroke-width:1.5px,color:#fef3c7;
+    classDef workerLayer fill:#1a1025,stroke:#a855f7,stroke-width:1.5px,color:#f3e8ff;
+    classDef alertRed fill:#3b0712,stroke:#ef4444,stroke-width:2px,color:#fecaca;
+    classDef alertGreen fill:#052e16,stroke:#22c55e,stroke-width:2px,color:#dcfce7;
+
+    subgraph CLIENT["🖥️ КЛИЕНТСКИЙ УРОВЕНЬ (Cyber HUD • Vanilla JS)"]
+        direction LR
+        UI_DASH["📊 Дашборд &amp; История<br/><i>(KPI, SVG-графики, фильтры)</i>"]:::clientLayer
+        UI_UPLOAD["📤 Загрузка файлов<br/><i>(Drag-and-Drop, прогресс)</i>"]:::clientLayer
+        UI_LIVE["⚡ Live-мониторинг<br/><i>(Терминал потока событий)</i>"]:::clientLayer
+        UI_THREATS["📚 Справочник угроз<br/><i>(0ms Stale-While-Revalidate)</i>"]:::clientLayer
+        
+        subgraph SANDBOX_ENV["🔒 Изолированная среда песочницы"]
+            WORKER["⚙️ Web Worker Sandbox<br/><i>(Safe Sandbox, без DOM/Net API, 3s Timeout)</i>"]:::workerLayer
+            EDITOR["📝 JS Code Editor<br/><i>(Пользовательские правила)</i>"]:::workerLayer
+            EDITOR -->|Потокобезопасный запуск| WORKER
+        end
     end
 
-    subgraph Server["Сервер (Node.js / Express)"]
-        Router["API Routes & Static Host"]
-        ScanSvc["ScanService"]
-        Analyzer["Static Analyzer"]
-        Emulator["Behavioral Emulator"]
-        Detector["Risk Score Engine"]
-        SocketS["Socket.IO Server"]
+    subgraph GATEWAY["🌐 СЕТЕВОЙ ШЛЮЗ &amp; АВТОРИЗАЦИЯ (Express API)"]
+        direction LR
+        AUTH_MW["🛡️ JWT Auth Guard<br/><i>(HttpOnly Cookie, RBAC: admin/user)</i>"]:::gatewayLayer
+        STATIC_SRV["📁 Static Host<br/><i>(HTML, CSS, JS, Assets)</i>"]:::gatewayLayer
+        UPLOAD_EP["📥 Multer Upload Handler<br/><i>(MIME-валидация, лимит 10MB)</i>"]:::gatewayLayer
+        SOCKET_SRV["🔌 Socket.IO Server<br/><i>(Комнаты сканирования, телеметрия)</i>"]:::gatewayLayer
     end
 
-    subgraph DB["База Данных (MSSQL)"]
-        T_Scans["dbo.Scans"]
-        T_Events["dbo.ScanEvents"]
-        T_Threats["dbo.Threats"]
-        T_Users["dbo.Users"]
-        T_Runs["dbo.SandboxRuns"]
+    subgraph BACKEND["⚙️ СЕРВЕРНЫЙ КОМПЛЕКС АНАЛИЗА (ScanService)"]
+        direction TB
+        SCAN_SVC["🎯 ScanService Orchestrator<br/><i>(Координация пайплайна проверки)</i>"]:::engineLayer
+
+        subgraph PIPELINE["🔬 Двухэтапный конвейер детекции"]
+            direction LR
+            ANALYZER["1️⃣ Статический анализатор<br/><i>• Энтропия Шеннона<br/>• SHA-256 хэширование<br/>• Поиск опасных сигнатур &amp; URL</i>"]:::engineLayer
+            EMULATOR["2️⃣ Поведенческий эмулятор<br/><i>• Ransomware, Worm, Trojan<br/>• Keylogger, Backdoor, Adware<br/>• Симуляция шагов атаки</i>"]:::engineLayer
+        end
+
+        DETECTOR["⚖️ Risk Score Engine<br/><i>(Взвешенная сумма эвристик: 0 - 100)</i>"]:::engineLayer
+        
+        subgraph VERDICTS["🎯 Вердикт безопасности"]
+            direction LR
+            V_CLEAN["CLEAN / LOW<br/>(0 - 29 баллов)"]:::alertGreen
+            V_MED["MEDIUM / HIGH<br/>(30 - 79 баллов)"]:::engineLayer
+            V_CRIT["CRITICAL<br/>(80 - 100 баллов)"]:::alertRed
+        end
     end
 
-    UI -->|HTTP / Fetch| Router
-    UI <-->|WebSocket Real-Time| SocketS
-    UI -->|Code Exec| Worker
-    Router --> ScanSvc
-    ScanSvc --> Analyzer
-    ScanSvc --> Emulator
-    Emulator --> Detector
-    Detector --> SocketS
-    ScanSvc --> DB
+    subgraph DATABASE["🗄️ СЛОЙ ХРАНЕНИЯ ДАННЫХ (Microsoft SQL Server)"]
+        direction TB
+        DB_SCANS[("📋 dbo.Scans<br/><i>Результаты, хэши, вердикты, user_id</i>")]:::dbLayer
+        DB_EVENTS[("📜 dbo.ScanEvents<br/><i>Потоковые телеметрические логи</i>")]:::dbLayer
+        DB_THREATS[("📚 dbo.Threats<br/><i>Матрица угроз и весовые шкалы</i>")]:::dbLayer
+        DB_USERS[("👤 dbo.Users<br/><i>Учётные записи, роли, блокировки</i>")]:::dbLayer
+        DB_RUNS[("🧪 dbo.SandboxRuns<br/><i>История запусков правил песочницы</i>")]:::dbLayer
+    end
+
+    %% Потоки данных: Клиент -> Шлюз
+    UI_UPLOAD -->|POST /api/upload| UPLOAD_EP
+    UI_DASH <-->|REST API + JWT| AUTH_MW
+    UI_THREATS <-->|GET /api/threats| AUTH_MW
+    UI_LIVE <-->|WebSockets: scan:join, scan:events| SOCKET_SRV
+    WORKER -->|POST /api/sandbox/runs| AUTH_MW
+
+    %% Потоки данных: Шлюз -> Анализ
+    UPLOAD_EP -->|Файл на анализ| SCAN_SVC
+    AUTH_MW --> SCAN_SVC
+    SCAN_SVC --> ANALYZER
+    ANALYZER -->|Сигнатурные веса| DETECTOR
+    SCAN_SVC -->|Запуск профиля эмуляции| EMULATOR
+    EMULATOR -->|analysis:event| SOCKET_SRV
+    EMULATOR -->|Поведенческие веса| DETECTOR
+    DETECTOR --> VERDICTS
+    DETECTOR -->|scan:complete &amp; detector:alert| SOCKET_SRV
+
+    %% Потоки данных: Сервис -> БД
+    SCAN_SVC -->|sp_CreateScan, sp_SaveScanEvents| DB_SCANS
+    SCAN_SVC -->|Bulk Insert событий| DB_EVENTS
+    AUTH_MW <-->|CRUD пользователей| DB_USERS
+    AUTH_MW <-->|sp_GetAllThreats (с кэшированием)| DB_THREATS
+    AUTH_MW <-->|Сохранение прогонов песочницы| DB_RUNS
 ```
 
 ---
