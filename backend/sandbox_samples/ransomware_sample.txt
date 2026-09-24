@@ -1,5 +1,8 @@
 SANDBOX TEST SAMPLE — inert text only
+Ransomware extortion pattern:
+crypto.subtle
 README_DECRYPT.txt
-file_rename
-file_write
-cmd.exe
+cmd.exe /c vssadmin delete shadows /all /quiet
+powershell.exe -Command Stop-Service WinDefend
+C:\Users\Victim\Documents
+https://ransom-c2.invalid/keys

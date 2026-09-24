@@ -1,0 +1,6 @@
+SANDBOX TEST SAMPLE — inert text only
+powershell.exe -enc VGVzdFRyb2phbg==
+child_process
+navigator.sendBeacon
+https://example.invalid/telemetry
+eval('unpack()')

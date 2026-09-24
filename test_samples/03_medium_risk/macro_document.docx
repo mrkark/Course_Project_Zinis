@@ -1,0 +1,10 @@
+PK
+[Content_Types].xml
+word/document.xml
+word/vbaProject.bin
+Sub AutoOpen()
+  ' VBA Macro Document with COM automation
+  Dim obj As Object
+  Set obj = CreateObject("WScript.Shell")
+  ' Macro presence indicator
+End Sub

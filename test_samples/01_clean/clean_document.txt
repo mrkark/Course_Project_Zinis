@@ -1,0 +1,13 @@
+Malware Sandbox Platform - User Manual & Architecture Overview
+==============================================================
+
+This is a benign educational document describing sandbox operations.
+The application provides static pattern analysis and dynamic behavior emulation.
+Everything operates in a safe, controlled environment.
+
+System components:
+- Frontend: Vanilla JavaScript, HTML5, CSS tokens
+- Backend: Node.js, Express, Socket.IO
+- Database: Microsoft SQL Server
+
+All functionality is for demonstration and research purposes only.

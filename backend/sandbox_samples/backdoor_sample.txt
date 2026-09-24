@@ -1,4 +1,10 @@
 SANDBOX TEST SAMPLE — inert text only
-child_process
-WebSocket
-192.0.2.10
+Process injection and remote shell simulation:
+OpenProcess
+VirtualAllocEx
+WriteProcessMemory
+CreateRemoteThread
+cmd.exe /c powershell.exe -w hidden
+connect(
+send(
+198.51.100.25:4444

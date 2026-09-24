@@ -1,0 +1,5 @@
+SANDBOX TEST SAMPLE — inert text only
+Clean benign configuration file
+version: 1.0.0
+app: Educational Sandbox Demo
+status: operational

@@ -1,0 +1,5 @@
+SANDBOX TEST SAMPLE — inert text only
+eternalblue exploit simulation
+child_process
+192.168.1.50
+cmd.exe /c start /b worm.exe

@@ -1,17 +1,36 @@
 // backend/src/models/Threat.js
 const db = require('../config/database');
 
+let threatsCache = null;
+let threatsCacheTime = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 минут кэширования в памяти
+
 /**
  * Threat model for database operations - uses stored procedures
  */
 class Threat {
   /**
-   * Get all threats using stored procedure
+   * Invalidate in-memory threats cache
+   */
+  static invalidateCache() {
+    threatsCache = null;
+    threatsCacheTime = 0;
+  }
+
+  /**
+   * Get all threats using stored procedure with in-memory caching
    * @returns {Promise<Array>} List of threats
    */
   static async findAll() {
+    const now = Date.now();
+    if (threatsCache && (now - threatsCacheTime < CACHE_TTL_MS)) {
+      return threatsCache;
+    }
+
     const result = await db.executeProcedure('sp_GetAllThreats');
-    return result.recordset.map(this.formatThreat);
+    threatsCache = result.recordset.map(this.formatThreat);
+    threatsCacheTime = now;
+    return threatsCache;
   }
 
   /**
@@ -41,6 +60,7 @@ class Threat {
       severity
     });
     
+    this.invalidateCache();
     return this.findByType(type);
   }
 

@@ -1,4 +1,11 @@
 SANDBOX TEST SAMPLE — inert text only
+Keystroke interception and spyware telemetry:
+cmd.exe /c powershell.exe -w hidden -Command Start-Keylogger
+child_process
+SetWindowsHookEx
 GetAsyncKeyState
-keystroke_capture
-https://example.invalid/c2
+GetForegroundWindow
+InternetConnect
+198.51.100.33
+https://exfil-logs.invalid/keys
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run\KeyMonitor

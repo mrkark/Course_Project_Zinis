@@ -235,7 +235,7 @@ ALLOWED_EXTENSIONS=.exe,.pdf,.js,.txt,.docx,.zip,.apk
 ALLOWED_MIME_TYPES=application/octet-stream,application/pdf,application/javascript,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/zip,application/vnd.android.package-archive
 
 # Frontend
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
 
 # Socket.IO
 SOCKET_PING_TIMEOUT=60000

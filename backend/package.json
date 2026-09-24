@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "dev:full": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run dev\" \"npm run dev --prefix ../frontend\"",
+    "dev:full": "node --watch server.js",
     "test": "jest --coverage",
     "lint": "eslint src/"
   },

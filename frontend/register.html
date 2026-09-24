@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Регистрация — Malware Sandbox Platform</title>
+<title>Регистрация — Malware Sandbox</title>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/tokens.css">
 <link rel="stylesheet" href="/css/base.css">
@@ -13,42 +13,35 @@
 <body data-page="register" data-public="true">
 
 <div class="auth-screen">
-  <div class="auth-screen__side">
-    <div>
-      <div class="flex-row" style="gap:10px;margin-bottom:32px">
-        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--accent-500)" stroke-width="1.6"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5l-8-3z"/><path d="m9 12 2 2 4-4"/></svg>
-        <div class="sidebar__brand-text" style="font-size:16px">Malware Sandbox<br><small>Учебная платформа анализа ВПО</small></div>
+  <div class="auth-card">
+    <div class="auth-card__brand">
+      <svg viewBox="0 0 24 24" style="color:var(--accent-500)"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3" stroke="currentColor" stroke-width="1"/></svg>
+      <div class="brand-name">MALWARE SANDBOX</div>
+      <div class="brand-sub">Platform // New Access</div>
+    </div>
+
+    <h1>Регистрация</h1>
+    <p class="lede">Пароль — не короче 8 символов</p>
+
+    <div class="form-error" id="form-error"></div>
+
+    <form id="register-form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" placeholder="user@example.com">
       </div>
-      <h1 style="font-size:1.4rem">Создайте аккаунт</h1>
-      <p>Регистрация даёт доступ к личной истории сканирований, загрузке файлов и песочнице. Роль администратора выдаётся отдельно.</p>
-    </div>
-  </div>
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Минимум 8 символов">
+      </div>
+      <div class="field">
+        <label for="password2">Повторите пароль</label>
+        <input type="password" id="password2" name="password2" required minlength="8" autocomplete="new-password">
+      </div>
+      <button class="btn btn--primary btn--block" type="submit" id="submit-btn">Создать аккаунт</button>
+    </form>
 
-  <div class="auth-screen__form-col">
-    <div class="auth-card">
-      <h1>Регистрация</h1>
-      <p class="lede">Пароль — не короче 8 символов.</p>
-
-      <div class="form-error" id="form-error"></div>
-
-      <form id="register-form">
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email" placeholder="user@example.com">
-        </div>
-        <div class="field">
-          <label for="password">Пароль</label>
-          <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="Минимум 8 символов">
-        </div>
-        <div class="field">
-          <label for="password2">Повторите пароль</label>
-          <input type="password" id="password2" name="password2" required minlength="8" autocomplete="new-password">
-        </div>
-        <button class="btn btn--primary btn--block" type="submit" id="submit-btn">Создать аккаунт</button>
-      </form>
-
-      <p style="margin-top:20px;font-size:13px">Уже есть аккаунт? <a href="/index.html">Войти</a></p>
-    </div>
+    <p style="margin-top:20px;font-size:13px;text-align:center">Уже есть аккаунт? <a href="/index.html">Войти</a></p>
   </div>
 </div>
 

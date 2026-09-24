@@ -1,0 +1,7 @@
+SANDBOX TEST SAMPLE — inert text only
+adware
+ad_inject
+popunder
+navigator.sendBeacon
+https://adnetwork.example.invalid/impression
+localStorage.setItem('ad_track', 'true')

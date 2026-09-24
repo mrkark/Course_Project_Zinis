@@ -1,33 +1,54 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
 *, *::before, *::after { box-sizing: border-box; }
 
-html, body {
-  height: 100%;
-}
+html, body { height: 100%; }
 
 body {
   margin: 0;
-  background: var(--surface-0);
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(34, 211, 245, 0.08), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(34, 211, 245, 0.05), transparent 55%),
+    var(--surface-0);
   color: var(--text-primary);
   font-family: var(--font-body);
+  font-weight: 500;
   font-size: var(--fs-base);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  position: relative;
 }
+
+/* Тонкая HUD-сетка поверх всего фона, не мешает чтению */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(34, 211, 245, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 245, 0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: radial-gradient(ellipse 100% 100% at 50% 0%, black 0%, transparent 75%);
+}
+
+.app-shell, .auth-screen { position: relative; z-index: 1; }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-weight: 600;
   margin: 0 0 var(--space-2);
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--text-primary);
 }
 
-h1 { font-size: var(--fs-xl); }
+h1 { font-size: var(--fs-xl); text-shadow: 0 0 14px rgba(34, 211, 245, 0.25); }
 h2 { font-size: var(--fs-lg); }
 h3 { font-size: var(--fs-md); }
 
-p { margin: 0 0 var(--space-3); color: var(--text-secondary); }
+p { margin: 0 0 var(--space-3); color: var(--text-secondary); font-weight: 500; }
 
 a { color: var(--accent-400); text-decoration: none; }
 a:hover { text-decoration: underline; }
@@ -38,18 +59,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 button { font-family: inherit; }
 
-::selection { background: var(--accent-soft); }
+::selection { background: var(--accent-soft); color: var(--text-primary); }
 
-/* Скроллбар в духе консоли, не системный по умолчанию */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--surface-0); }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: var(--radius-sm); }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-600); }
 
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
-  border-radius: var(--radius-sm);
 }
 
 .visually-hidden {
@@ -58,4 +77,17 @@ button { font-family: inherit; }
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* Пульсация — для онлайн-индикаторов, статусов сокета и т.п. */
+@keyframes hud-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent-glow); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 4px transparent; }
+}
+.hud-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent-500);
+  animation: hud-pulse 1.8s ease-in-out infinite;
 }

@@ -3,8 +3,16 @@ const config = require('../config');
 const Threat = require('../models/Threat');
 
 /**
- * Detector - evaluates risk score and determines verdict
- * Applies detection rules and emits alerts
+ * Detector — оценивает risk score и определяет вердикт.
+ *
+ * Статическая оценка: на основе сигнатурных находок FileAnalyzer
+ * с мультипликаторами за множественные находки и корреляционными бонусами.
+ *
+ * Поведенческая оценка: на основе событий data-driven эмуляции.
+ * Теперь события привязаны к реальному содержимому файла, поэтому
+ * их тип и количество напрямую отражают опасность.
+ *
+ * Финальный скор: static × 0.40 + behavioral × 0.60
  */
 class Detector {
   constructor(io) {
@@ -21,47 +29,48 @@ class Detector {
     return {
       // Пороговые значения вердиктов
       thresholds: config.analysis.riskScores,
-      
+
       // Правила бонусов/штрафов
       modifiers: {
-        // Бонусы за множественные находки в одной категории
-        categoryMultiplier: {
-          crypto_operation: 1.5,
-          data_exfiltration: 1.5,
+        // Мультипликаторы за множественные находки по тегам
+        tagMultiplier: {
+          process_injection: 1.5,
           command_execution: 1.5,
-          exploit_attempt: 2.0,
-          ransom_note: 2.0,
+          exfiltration: 1.5,
+          known_tool: 2.0,
         },
-        
-        // Штрафы за отсутствие сетевой активности при высоком риске
-        noNetworkPenalty: 0.8,
-        
-        // Бонус за известные_IOC
-        knownIOCBonus: 20,
+
+        // Корреляционные бонусы: если найдены НЕСКОЛЬКО категорий опасности
+        // одновременно, это значительно повышает вероятность ВПО.
+        correlationRules: [
+          { tags: ['network', 'obfuscation', 'process_injection'], bonus: 15, description: 'Сеть + обфускация + инъекция' },
+          { tags: ['network', 'command_execution'], bonus: 10, description: 'Сеть + исполнение команд' },
+          { tags: ['keylogging', 'network'], bonus: 10, description: 'Кейлоггинг + сеть' },
+          { tags: ['obfuscation', 'code_execution'], bonus: 8, description: 'Обфускация + исполнение кода' },
+          { tags: ['crypto', 'data_access'], bonus: 12, description: 'Криптография + доступ к данным' },
+        ],
+
+        // Штраф за отсутствие сетевой активности при высоком риске
+        noNetworkPenalty: 0.85,
       },
-      
-      // Правила для динамического анализа (behavioral)
-      behavioralRules: {
-        ransomware: {
-          massFileModification: { threshold: 10, score: 25 },
-          ransomNoteCreation: { threshold: 1, score: 30 },
-          shadowCopyDeletion: { threshold: 1, score: 20 },
-        },
-        keylogger: {
-          keystrokeCapture: { threshold: 5, score: 25 },
-          clipboardMonitor: { threshold: 3, score: 15 },
-          periodicExfiltration: { threshold: 1, score: 20 },
-        },
-        backdoor: {
-          c2Connection: { threshold: 1, score: 30 },
-          commandExecution: { threshold: 3, score: 25 },
-          persistenceMechanism: { threshold: 1, score: 15 },
-        },
-        worm: {
-          networkScan: { threshold: 10, score: 20 },
-          exploitAttempt: { threshold: 1, score: 30 },
-          lateralMovement: { threshold: 1, score: 25 },
-        },
+
+      // Веса для поведенческих событий (по eventType)
+      behavioralWeights: {
+        process_injection: 12,
+        network_connection: 8,
+        command_execution: 10,
+        hook_install: 15,
+        keystroke_capture: 12,
+        code_decryption: 5,
+        registry_modification: 6,
+        data_access: 4,
+        known_malware_tool: 15,
+        api_call: 3,
+        file_access: 2,
+        process_spawn: 0,
+        memory_allocation: 0,
+        process_exit: 0,
+        analysis_complete: 0,
       },
     };
   }
@@ -77,55 +86,66 @@ class Detector {
   }
 
   /**
-   * Evaluate static analysis results
+   * Evaluate static analysis results.
+   *
+   * Базовый скор приходит от FileAnalyzer (сумма score по всем найденным паттернам).
+   * Здесь мы применяем мультипликаторы за множественные находки и корреляционные бонусы.
+   *
    * @param {Object} analysisResults - Results from fileAnalyzer
    * @returns {Object} Detection result
    */
   evaluateStatic(analysisResults) {
     let riskScore = analysisResults.riskScore || 0;
     const findings = analysisResults.findings || [];
-    
-    // Применяем модификаторы по категориям
-    const categoryCounts = {};
+    const indicators = analysisResults.indicators || {};
+
+    // Подсчёт находок по тегам
+    const tagCounts = {};
     for (const finding of findings) {
-      categoryCounts[finding.category] = (categoryCounts[finding.category] || 0) + 1;
+      const tag = finding.tag || finding.category;
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
     }
-    
-    for (const [category, count] of Object.entries(categoryCounts)) {
-      const multiplier = this.rules.modifiers.categoryMultiplier[category];
+
+    // Мультипликаторы: множественные находки одного типа усиливают скор
+    for (const [tag, count] of Object.entries(tagCounts)) {
+      const multiplier = this.rules.modifiers.tagMultiplier[tag];
       if (multiplier && count > 1) {
-        const categoryFindings = findings.filter(f => f.category === category);
-        const categoryScore = categoryFindings.reduce((sum, f) => sum + f.score, 0);
-        riskScore += Math.round(categoryScore * (multiplier - 1));
+        const tagFindings = findings.filter(f => (f.tag || f.category) === tag);
+        const tagScore = tagFindings.reduce((sum, f) => sum + f.score, 0);
+        riskScore += Math.round(tagScore * (multiplier - 1));
       }
     }
-    
-    // Проверка на известные IOC
-    const knownIOC = findings.some(f => 
-      f.description.toLowerCase().includes('metasploit') ||
-      f.description.toLowerCase().includes('mimikatz') ||
-      f.description.toLowerCase().includes('cobalt strike')
-    );
-    if (knownIOC) {
-      riskScore += this.rules.modifiers.knownIOCBonus;
+
+    // Корреляционные бонусы: комбинация нескольких типов угроз → повышение скора
+    const presentTags = new Set(Object.keys(tagCounts));
+    const appliedCorrelations = [];
+    for (const rule of this.rules.modifiers.correlationRules) {
+      if (rule.tags.every(t => presentTags.has(t))) {
+        riskScore += rule.bonus;
+        appliedCorrelations.push(rule.description);
+      }
     }
-    
-    // Ограничение максимального скора
+
+    // Ограничение
     riskScore = Math.min(riskScore, 100);
-    
+
     const verdict = this.getVerdict(riskScore);
-    
+
     return {
       riskScore,
       verdict,
       staticFindings: findings.length,
-      categories: Object.keys(categoryCounts),
-      modifiersApplied: Object.keys(categoryCounts).filter(c => this.rules.modifiers.categoryMultiplier[c]),
+      tags: [...presentTags],
+      correlations: appliedCorrelations,
     };
   }
 
   /**
-   * Evaluate behavioral emulation events
+   * Evaluate behavioral emulation events.
+   *
+   * Теперь события привязаны к реальному содержимому файла,
+   * поэтому их оценка основана на типе и severity.
+   *
    * @param {Array} events - Behavioral events
    * @param {string} malwareType - Detected malware type
    * @returns {Object} Behavioral detection result
@@ -133,49 +153,47 @@ class Detector {
   evaluateBehavioral(events, malwareType) {
     let riskScore = 0;
     const triggeredRules = [];
-    
-    const rules = this.rules.behavioralRules[malwareType] || {};
-    const eventTypes = events.map(e => e.eventType);
+
+    // Подсчёт по типам событий
     const eventCounts = {};
-    
-    for (const type of eventTypes) {
-      eventCounts[type] = (eventCounts[type] || 0) + 1;
+    for (const e of events) {
+      eventCounts[e.eventType] = (eventCounts[e.eventType] || 0) + 1;
     }
-    
-    for (const [ruleName, rule] of Object.entries(rules)) {
-      const count = eventCounts[ruleName] || 0;
-      if (count >= rule.threshold) {
-        riskScore += rule.score;
-        triggeredRules.push({
-          rule: ruleName,
-          count,
-          threshold: rule.threshold,
-          score: rule.score,
-        });
+
+    // Начисляем баллы за каждый тип события
+    for (const [eventType, count] of Object.entries(eventCounts)) {
+      const weight = this.rules.behavioralWeights[eventType];
+      if (weight !== undefined && weight > 0) {
+        // Уменьшающаяся отдача: первое событие — полный вес,
+        // последующие — по sqrt(count) для снижения влияния повторов
+        const score = Math.round(weight * Math.sqrt(count));
+        riskScore += score;
+        triggeredRules.push({ rule: eventType, count, weight, score });
       }
     }
-    
-    // Общие поведенческие правила
+
+    // Бонус за количество CRITICAL событий
     const criticalEvents = events.filter(e => e.severity === 'CRITICAL').length;
-    if (criticalEvents > 5) {
-      riskScore += 15;
-      triggeredRules.push({ rule: 'high_critical_event_count', count: criticalEvents, score: 15 });
+    if (criticalEvents > 3) {
+      const bonus = Math.min(15, Math.round(criticalEvents * 2));
+      riskScore += bonus;
+      triggeredRules.push({ rule: 'critical_event_density', count: criticalEvents, score: bonus });
     }
-    
-    const networkEvents = events.filter(e => 
-      e.eventType.includes('network') || 
-      e.eventType.includes('c2') || 
+
+    // Сетевые события
+    const networkEvents = events.filter(e =>
+      e.eventType.includes('network') ||
       e.eventType.includes('connection') ||
       e.eventType.includes('exfiltration')
     ).length;
-    
+
     if (networkEvents === 0 && riskScore > 30) {
-      // Штраф за отсутствие сетевой активности при подозрительном поведении
+      // Нет сетевой активности при высоком скоре — скорее безобидно
       riskScore = Math.round(riskScore * this.rules.modifiers.noNetworkPenalty);
     }
-    
+
     riskScore = Math.min(riskScore, 100);
-    
+
     return {
       riskScore,
       verdict: this.getVerdict(riskScore),
@@ -198,9 +216,9 @@ class Detector {
     const combinedScore = Math.round(
       staticResult.riskScore * 0.4 + behavioralResult.riskScore * 0.6
     );
-    
+
     const verdict = this.getVerdict(combinedScore);
-    
+
     // Эмитим алерт если вердикт HIGH или CRITICAL
     if (verdict === 'HIGH' || verdict === 'CRITICAL') {
       this.emitAlert({
@@ -211,7 +229,7 @@ class Detector {
         timestamp: new Date().toISOString(),
       });
     }
-    
+
     return {
       riskScore: combinedScore,
       verdict,

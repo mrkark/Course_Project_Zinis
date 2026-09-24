@@ -12,6 +12,7 @@ const router = express.Router();
 router.get('/', asyncHandler(async (req, res) => {
   const threats = await Threat.findAll();
   
+  res.set('Cache-Control', 'public, max-age=120, stale-while-revalidate=300');
   res.json({
     success: true,
     data: threats,

